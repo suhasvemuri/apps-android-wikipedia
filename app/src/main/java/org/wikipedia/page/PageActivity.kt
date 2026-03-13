@@ -63,6 +63,7 @@ import org.wikipedia.navtab.NavTab
 import org.wikipedia.notifications.AnonymousNotificationHelper
 import org.wikipedia.notifications.NotificationActivity
 import org.wikipedia.page.linkpreview.LinkPreviewDialog
+import org.wikipedia.page.action.PageActionItem
 import org.wikipedia.page.tabs.TabActivity
 import org.wikipedia.readinglist.ReadingListActivity
 import org.wikipedia.readinglist.ReadingListMode
@@ -433,6 +434,24 @@ class PageActivity : BaseActivity(), PageFragment.Callback, LinkPreviewDialog.Lo
         if (event.isCtrlPressed && keyCode == KeyEvent.KEYCODE_F || !event.isCtrlPressed && keyCode == KeyEvent.KEYCODE_F3) {
             pageFragment.showFindInPage()
             return true
+        }
+        if (event.isCtrlPressed) {
+            when (keyCode) {
+                KeyEvent.KEYCODE_T -> {
+                    requestBrowseTabLauncher.launch(TabActivity.newIntentFromPageActivity(this))
+                    return true
+                }
+                KeyEvent.KEYCODE_B,
+                KeyEvent.KEYCODE_S -> {
+                    pageFragment.performPageAction(PageActionItem.SAVE)
+                    return true
+                }
+                KeyEvent.KEYCODE_DPAD_RIGHT,
+                KeyEvent.KEYCODE_DPAD_LEFT -> {
+                    pageFragment.performPageAction(PageActionItem.CONTENTS)
+                    return true
+                }
+            }
         }
         return super.onKeyDown(keyCode, event)
     }

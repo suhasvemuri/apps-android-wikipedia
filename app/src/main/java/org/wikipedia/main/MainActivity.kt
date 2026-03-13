@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.view.KeyEvent
 import android.view.View
 import androidx.activity.addCallback
 import androidx.activity.result.contract.ActivityResultContracts
@@ -185,6 +186,32 @@ class MainActivity : SingleFragmentActivity<MainFragment>(), MainFragment.Callba
 
     private fun clearToolbarElevation() {
         binding.mainToolbar.elevation = 0f
+    }
+
+    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
+        if (event.isCtrlPressed) {
+            when (keyCode) {
+                KeyEvent.KEYCODE_1 -> {
+                    fragment.onNavigateTo(NavTab.EXPLORE)
+                    return true
+                }
+                KeyEvent.KEYCODE_2 -> {
+                    fragment.onNavigateTo(NavTab.READING_LISTS)
+                    return true
+                }
+                KeyEvent.KEYCODE_3,
+                KeyEvent.KEYCODE_K,
+                KeyEvent.KEYCODE_L -> {
+                    fragment.openSearchActivity(Constants.InvokeSource.NAV_MENU, null, null)
+                    return true
+                }
+                KeyEvent.KEYCODE_4 -> {
+                    fragment.onNavigateTo(NavTab.EDITS)
+                    return true
+                }
+            }
+        }
+        return super.onKeyDown(keyCode, event)
     }
 
     companion object {

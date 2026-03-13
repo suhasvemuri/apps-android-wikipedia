@@ -391,6 +391,11 @@ class SearchFragment : Fragment(), SearchResultCallback, RecentSearchesFragment.
         searchEditPlate.setBackgroundColor(Color.TRANSPARENT)
     }
 
+    fun focusSearchInput() {
+        binding.searchCabView.requestFocus()
+        DeviceUtil.showSoftKeyboard(binding.searchCabView)
+    }
+
     private fun initLangButton() {
         binding.searchLangButton.setLangCode(app.languageState.appLanguageCode.uppercase(Locale.ENGLISH))
         FeedbackUtil.setButtonTooltip(binding.searchLangButton)

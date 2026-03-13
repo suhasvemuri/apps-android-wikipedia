@@ -3,6 +3,7 @@ package org.wikipedia.page.tabs
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.view.KeyEvent
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -144,6 +145,22 @@ class TabActivity : BaseActivity() {
         finish()
     }
 
+    private fun closeForegroundTab() {
+        if (app.tabList.isEmpty()) {
+            return
+        }
+        val adapterPosition = 0
+        val index = adapterPositionToTabIndex(adapterPosition)
+        val appTab = app.tabList.removeAt(index)
+        binding.tabCountsView.updateTabCount(false)
+        binding.tabRecyclerView.adapter?.notifyItemRemoved(adapterPosition)
+        if (adapterPosition == 0 && app.tabCount > 0) {
+            binding.tabRecyclerView.adapter?.notifyItemChanged(0)
+        }
+        setResult(RESULT_LOAD_FROM_BACKSTACK)
+        showUndoSnackbar(index, appTab, adapterPosition)
+    }
+
     private fun showUndoSnackbar(index: Int, appTab: Tab, adapterPosition: Int) {
         appTab.backStackPositionTitle?.let {
             FeedbackUtil.makeSnackbar(this, getString(R.string.tab_item_closed, it.displayText)).run {
@@ -179,6 +196,32 @@ class TabActivity : BaseActivity() {
                 .putExtra(Constants.INTENT_RETURN_TO_MAIN, true)
                 .putExtra(Constants.INTENT_EXTRA_GO_TO_MAIN_TAB, NavTab.EXPLORE.code()))
         finish()
+    }
+
+    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
+        if (event.isCtrlPressed) {
+            when (keyCode) {
+                KeyEvent.KEYCODE_T -> {
+                    openNewTab()
+                    return true
+                }
+                KeyEvent.KEYCODE_W -> {
+                    closeForegroundTab()
+                    return true
+                }
+                KeyEvent.KEYCODE_S -> {
+                    if (app.tabList.isNotEmpty()) {
+                        saveTabsToList()
+                    }
+                    return true
+                }
+            }
+        }
+        if (keyCode == KeyEvent.KEYCODE_ESCAPE) {
+            onBackPressedDispatcher.onBackPressed()
+            return true
+        }
+        return super.onKeyDown(keyCode, event)
     }
 
     private fun updateNotificationsButton(animate: Boolean) {

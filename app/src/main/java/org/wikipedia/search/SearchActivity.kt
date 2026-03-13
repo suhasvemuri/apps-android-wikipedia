@@ -3,6 +3,7 @@ package org.wikipedia.search
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.view.KeyEvent
 import androidx.activity.OnBackPressedCallback
 import org.wikipedia.Constants
 import org.wikipedia.Constants.InvokeSource
@@ -62,6 +63,18 @@ class SearchActivity : SingleFragmentActivity<SearchFragment>() {
             title = intent.getStringExtra(EXTRA_TITLE),
             initiateHybridSearch = intent.getBooleanExtra(EXTRA_SHOW_HYBRID_SEARCH, false)
         )
+    }
+
+    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
+        if (event.isCtrlPressed && (keyCode == KeyEvent.KEYCODE_K || keyCode == KeyEvent.KEYCODE_L)) {
+            fragment.focusSearchInput()
+            return true
+        }
+        if (keyCode == KeyEvent.KEYCODE_ESCAPE) {
+            onBackPressedDispatcher.onBackPressed()
+            return true
+        }
+        return super.onKeyDown(keyCode, event)
     }
 
     companion object {

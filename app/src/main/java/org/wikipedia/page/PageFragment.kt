@@ -1278,6 +1278,10 @@ class PageFragment : Fragment(), BackPressedHandler, CommunicationBridge.Communi
         PageActionOverflowView(requireContext()).show(anchor, pageActionItemCallback, currentTab, model)
     }
 
+    fun performPageAction(pageActionItem: PageActionItem) {
+        pageActionItem.select(pageActionItemCallback)
+    }
+
     fun goToMainActivity(tab: NavTab, tabExtra: String) {
         startActivity(MainActivity.newIntent(requireActivity())
             .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)

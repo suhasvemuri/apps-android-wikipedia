@@ -8,6 +8,7 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.os.Bundle
 import android.view.Gravity
+import android.view.KeyEvent
 import android.view.View
 import android.widget.FrameLayout
 import androidx.activity.addCallback
@@ -240,6 +241,34 @@ class GalleryActivity : BaseActivity(), LinkPreviewDialog.LoadPageCallback, Gall
             layoutParams.endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
             binding.toolbarContainer.layoutParams = layoutParams
         }
+    }
+
+    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
+        when (keyCode) {
+            KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_PAGE_UP -> {
+                binding.pager.setCurrentItem((binding.pager.currentItem - 1).coerceAtLeast(0), true)
+                return true
+            }
+            KeyEvent.KEYCODE_DPAD_RIGHT, KeyEvent.KEYCODE_PAGE_DOWN -> {
+                val maxIndex = (binding.pager.adapter?.itemCount ?: 1) - 1
+                binding.pager.setCurrentItem((binding.pager.currentItem + 1).coerceAtMost(maxIndex), true)
+                return true
+            }
+            KeyEvent.KEYCODE_MOVE_HOME -> {
+                binding.pager.setCurrentItem(0, true)
+                return true
+            }
+            KeyEvent.KEYCODE_MOVE_END -> {
+                val maxIndex = (binding.pager.adapter?.itemCount ?: 1) - 1
+                binding.pager.setCurrentItem(maxIndex, true)
+                return true
+            }
+            KeyEvent.KEYCODE_ESCAPE -> {
+                onBackPressedDispatcher.onBackPressed()
+                return true
+            }
+        }
+        return super.onKeyDown(keyCode, event)
     }
 
     public override fun onDestroy() {
