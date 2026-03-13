@@ -2,9 +2,9 @@ package org.wikipedia.navtab
 
 import android.content.Context
 import android.util.AttributeSet
-import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.navigationrail.NavigationRailView
 
-class NavTabLayout(context: Context, attrs: AttributeSet) : BottomNavigationView(context, attrs) {
+class NavTabRailView(context: Context, attrs: AttributeSet) : NavigationRailView(context, attrs) {
     init {
         NavTabViewUtil.populateMenu(menu)
     }

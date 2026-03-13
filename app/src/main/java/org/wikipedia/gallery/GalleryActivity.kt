@@ -14,6 +14,7 @@ import androidx.activity.addCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.core.view.isGone
@@ -50,6 +51,7 @@ import org.wikipedia.suggestededits.PageSummaryForEdit
 import org.wikipedia.suggestededits.SuggestedEditsImageTagEditActivity
 import org.wikipedia.suggestededits.SuggestedEditsSnackbars
 import org.wikipedia.theme.Theme
+import org.wikipedia.util.AdaptiveLayoutUtil
 import org.wikipedia.util.DeviceUtil
 import org.wikipedia.util.DimenUtil
 import org.wikipedia.util.FeedbackUtil
@@ -149,6 +151,7 @@ class GalleryActivity : BaseActivity(), LinkPreviewDialog.LoadPageCallback, Gall
         binding.pager.adapter = galleryAdapter
         binding.pager.registerOnPageChangeCallback(pageChangeListener)
         binding.pager.offscreenPageLimit = 2
+        applyAdaptiveGalleryLayout()
         if (savedInstanceState != null) {
             controlsShowing = savedInstanceState.getBoolean(KEY_CONTROLS_SHOWING)
             initialImageIndex = savedInstanceState.getInt(KEY_PAGER_INDEX)
@@ -219,6 +222,23 @@ class GalleryActivity : BaseActivity(), LinkPreviewDialog.LoadPageCallback, Gall
                     }
                 }
             }
+        }
+    }
+
+    private fun applyAdaptiveGalleryLayout() {
+        if (AdaptiveLayoutUtil.shouldUseAdaptivePanels(this)) {
+            return
+        }
+        val pagerLayoutParams = binding.pager.layoutParams as? ConstraintLayout.LayoutParams ?: return
+        binding.infoContainer.isGone = true
+        findViewById<View?>(R.id.gallery_info_divider)?.isGone = true
+        pagerLayoutParams.endToStart = ConstraintLayout.LayoutParams.UNSET
+        pagerLayoutParams.endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+        binding.pager.layoutParams = pagerLayoutParams
+        (binding.toolbarContainer.layoutParams as? ConstraintLayout.LayoutParams)?.let { layoutParams ->
+            layoutParams.endToStart = ConstraintLayout.LayoutParams.UNSET
+            layoutParams.endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            binding.toolbarContainer.layoutParams = layoutParams
         }
     }
 

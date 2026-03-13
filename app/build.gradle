@@ -193,6 +193,7 @@ dependencies {
     implementation libs.drawerlayout
     implementation libs.swiperefreshlayout
     implementation libs.work.runtime.ktx
+    implementation libs.androidx.window
     implementation libs.hcaptcha
 
     implementation libs.okhttp.tls

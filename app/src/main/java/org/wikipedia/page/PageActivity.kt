@@ -76,6 +76,7 @@ import org.wikipedia.suggestededits.SuggestedEditsImageTagEditActivity
 import org.wikipedia.suggestededits.SuggestedEditsSnackbars
 import org.wikipedia.talk.TalkTopicsActivity
 import org.wikipedia.usercontrib.UserContribListActivity
+import org.wikipedia.util.AdaptiveLayoutUtil
 import org.wikipedia.util.DeviceUtil
 import org.wikipedia.util.DimenUtil
 import org.wikipedia.util.FeedbackUtil
@@ -108,6 +109,7 @@ class PageActivity : BaseActivity(), PageFragment.Callback, LinkPreviewDialog.Lo
     private val isCabOpen get() = currentActionModes.isNotEmpty()
     private var exclusiveTooltipRunnable: Runnable? = null
     private var isTooltipShowing = false
+    private var foldInfo: AdaptiveLayoutUtil.FoldInfo? = null
 
     private val requestEditSectionLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
         if (it.resultCode == EditHandler.RESULT_REFRESH_PAGE) {
@@ -277,6 +279,15 @@ class PageActivity : BaseActivity(), PageFragment.Callback, LinkPreviewDialog.Lo
             }
             WindowInsetsCompat.CONSUMED
         }
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                AdaptiveLayoutUtil.windowLayoutInfoFlow(this@PageActivity).collectLatest { windowLayoutInfo ->
+                    foldInfo = AdaptiveLayoutUtil.extractVerticalFoldInfo(windowLayoutInfo)
+                    applyAdaptivePageLayout()
+                }
+            }
+        }
+        applyAdaptivePageLayout()
 
         // WikiArticleCard setup
         hasTransitionAnimation = intent.getBooleanExtra(Constants.INTENT_EXTRA_HAS_TRANSITION_ANIM, false)
@@ -342,6 +353,18 @@ class PageActivity : BaseActivity(), PageFragment.Callback, LinkPreviewDialog.Lo
         updateNotificationsButton(false)
         Prefs.temporaryWikitext = null
         YearInReviewDialog.maybeShowYearInReviewFeedbackDialog(this)
+    }
+
+    private fun applyAdaptivePageLayout() {
+        val margins = if (AdaptiveLayoutUtil.shouldUseAdaptivePanels(this)) {
+            AdaptiveLayoutUtil.pagePaneMargins(this, foldInfo)
+        } else {
+            0 to 0
+        }
+        binding.containerWithNavTrigger.updateLayoutParams<MarginLayoutParams> {
+            leftMargin = margins.first
+            rightMargin = margins.second
+        }
     }
 
     override fun onPause() {

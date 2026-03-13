@@ -70,6 +70,7 @@ import org.wikipedia.readinglist.sync.ReadingListSyncAdapter
 import org.wikipedia.readinglist.sync.ReadingListSyncEvent
 import org.wikipedia.settings.Prefs
 import org.wikipedia.settings.RemoteConfig
+import org.wikipedia.util.AdaptiveLayoutUtil
 import org.wikipedia.util.DeviceUtil
 import org.wikipedia.util.FeedbackUtil
 import org.wikipedia.util.ResourceUtil
@@ -129,6 +130,10 @@ class ReadingListsFragment : Fragment(), SortReadingListsDialog.Callback, Readin
         }
         binding.searchEmptyView.visibility = View.GONE
         enableLayoutTransition(true)
+        if (AdaptiveLayoutUtil.shouldUseAdaptivePanels(requireContext())) {
+            AdaptiveLayoutUtil.applyMaxWidth(binding.contentContainer, 1040)
+            AdaptiveLayoutUtil.applyMaxWidth(binding.emptyContainer, 720)
+        }
 
         viewLifecycleOwner.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.CREATED) {

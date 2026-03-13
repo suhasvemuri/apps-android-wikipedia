@@ -405,6 +405,10 @@
     <string name="preference_summary_show_link_previews">Show a quick preview of articles when tapping on links.</string>
     <string name="preference_title_collapse_tables">Collapse tables</string>
     <string name="preference_summary_collapse_tables">Automatically collapse tables in articles, such as infoboxes, references, and notes.</string>
+    <string name="preference_title_large_screen_panels">Adaptive large-screen panels</string>
+    <string name="preference_summary_large_screen_panels">Use side panels and dual-pane layouts on tablets and foldables.</string>
+    <string name="preference_title_wide_reading_layout">Wide-screen reading layout</string>
+    <string name="preference_summary_wide_reading_layout">Optimize article and media screens for tablets, foldables, keyboards, and multi-window use.</string>
     <string name="nav_item_donate">Donate</string>
     <string name="nav_item_year_in_review">Year In Review</string>
     <string name="error_voice_search_not_available">Sorry, voice recognition is not available.</string>

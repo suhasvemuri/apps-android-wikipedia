@@ -11,6 +11,7 @@ import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -35,6 +36,7 @@ import org.wikipedia.search.db.RecentSearch
 import org.wikipedia.settings.Prefs
 import org.wikipedia.settings.languages.WikipediaLanguagesActivity
 import org.wikipedia.settings.languages.WikipediaLanguagesFragment
+import org.wikipedia.util.AdaptiveLayoutUtil
 import org.wikipedia.util.DeviceUtil
 import org.wikipedia.util.FeedbackUtil
 import org.wikipedia.util.ResourceUtil
@@ -135,6 +137,7 @@ class SearchFragment : Fragment(), SearchResultCallback, RecentSearchesFragment.
         binding.searchContainer.setOnClickListener { onSearchContainerClick() }
         binding.searchLangButton.setOnClickListener { onLangButtonClick() }
         initSearchView()
+        applyAdaptiveSearchLayout()
         if (invokeSource == InvokeSource.PLACES) {
             Prefs.selectedLanguagePositionInSearch = app.languageState.appLanguageCodes.indexOf(Prefs.placesWikiCode)
             PlacesEvent.logImpression("search_view")
@@ -316,6 +319,14 @@ class SearchFragment : Fragment(), SearchResultCallback, RecentSearchesFragment.
     }
 
     private fun showPanel(panel: Int) {
+        if (useSplitSearchPanels()) {
+            recentSearchesFragment.show()
+            when (panel) {
+                PANEL_RECENT_SEARCHES -> searchResultsFragment.hide()
+                PANEL_SEARCH_RESULTS -> searchResultsFragment.show()
+            }
+            return
+        }
         when (panel) {
             PANEL_RECENT_SEARCHES -> {
                 searchResultsFragment.hide()
@@ -326,6 +337,24 @@ class SearchFragment : Fragment(), SearchResultCallback, RecentSearchesFragment.
                 searchResultsFragment.show()
             }
         }
+    }
+
+    private fun applyAdaptiveSearchLayout() {
+        if (useSplitSearchPanels()) {
+            return
+        }
+        val divider = binding.root.findViewById<View?>(R.id.search_panel_divider) ?: return
+        binding.searchPanelRecent.visibility = View.GONE
+        divider.visibility = View.GONE
+        binding.fragmentSearchResults.layoutParams =
+            (binding.fragmentSearchResults.layoutParams as ConstraintLayout.LayoutParams).apply {
+                startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+                startToEnd = ConstraintLayout.LayoutParams.UNSET
+            }
+    }
+
+    private fun useSplitSearchPanels(): Boolean {
+        return AdaptiveLayoutUtil.shouldUseAdaptivePanels(requireContext())
     }
 
     // otherwise, the recent searches must be showing:

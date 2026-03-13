@@ -10,7 +10,6 @@
         android:layout_width="wrap_content"
         android:layout_height="0dp"
         android:background="?attr/paper_color"
-        android:visibility="gone"
         app:headerLayout="@layout/view_nav_rail_header"
         app:itemIconTint="@color/color_state_nav_tab"
         app:itemTextAppearanceActive="@style/BottomNavigationTextAppearance.Active"
@@ -27,7 +26,6 @@
         android:layout_width="0.5dp"
         android:layout_height="0dp"
         android:background="?attr/border_color"
-        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@id/main_nav_rail_layout"
         app:layout_constraintTop_toTopOf="parent" />
@@ -36,10 +34,10 @@
         android:id="@+id/fragment_main_coordinator"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintStart_toEndOf="@id/main_nav_rail_border"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/main_nav_tab_border">
+        app:layout_constraintStart_toEndOf="@id/main_nav_rail_border"
+        app:layout_constraintTop_toTopOf="parent">
 
         <androidx.viewpager2.widget.ViewPager2
             android:id="@+id/main_view_pager"
@@ -50,28 +48,18 @@
 
     <View
         android:id="@+id/main_nav_tab_border"
-        android:layout_width="match_parent"
-        android:layout_height="0.5dp"
-        android:background="?attr/border_color"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/main_nav_tab_layout"/>
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <org.wikipedia.navtab.NavTabLayout
         android:id="@+id/main_nav_tab_layout"
-        android:background="?attr/paper_color"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/nav_bar_height"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:itemIconTint="@color/color_state_nav_tab"
-        app:itemTextAppearanceActive="@style/BottomNavigationTextAppearance.Active"
-        app:itemTextAppearanceInactive="@style/BottomNavigationTextAppearance"
-        app:itemTextColor="@color/color_state_nav_tab"
-        app:labelVisibilityMode="labeled"
-        app:tabGravity="fill"
-        app:itemPaddingTop="8dp"
-        app:elevation="0dp"/>
+        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

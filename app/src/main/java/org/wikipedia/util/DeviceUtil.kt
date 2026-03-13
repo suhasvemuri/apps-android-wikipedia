@@ -53,6 +53,10 @@ object DeviceUtil {
                 resources.configuration.keyboard != Configuration.KEYBOARD_NOKEYS)
     }
 
+    fun isLargeScreen(context: Context): Boolean {
+        return context.resources.configuration.screenWidthDp >= 600
+    }
+
     fun setLightSystemUiVisibility(activity: Activity) {
         // this make the system recognizes the status bar light and will make status bar icons become visible
         // if the theme is not dark

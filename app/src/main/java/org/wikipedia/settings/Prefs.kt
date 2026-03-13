@@ -209,6 +209,12 @@ object Prefs {
     val isCollapseTablesEnabled
         get() = PrefsIoUtil.getBoolean(R.string.preference_key_collapse_tables, true)
 
+    val isLargeScreenPanelsEnabled
+        get() = PrefsIoUtil.getBoolean(R.string.preference_key_large_screen_panels, true)
+
+    val isWideReadingLayoutEnabled
+        get() = PrefsIoUtil.getBoolean(R.string.preference_key_wide_reading_layout, true)
+
     fun getReadingListSortMode(defaultValue: Int): Int {
         return PrefsIoUtil.getInt(R.string.preference_key_reading_list_sort_mode, defaultValue)
     }

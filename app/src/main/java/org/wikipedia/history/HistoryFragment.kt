@@ -39,6 +39,7 @@ import org.wikipedia.page.PageAvailableOfflineHandler
 import org.wikipedia.readinglist.database.ReadingList
 import org.wikipedia.search.HybridSearchAbCTest
 import org.wikipedia.settings.Prefs
+import org.wikipedia.util.AdaptiveLayoutUtil
 import org.wikipedia.util.DimenUtil
 import org.wikipedia.util.FeedbackUtil
 import org.wikipedia.util.Resource
@@ -75,6 +76,10 @@ class HistoryFragment : Fragment(), BackPressedHandler {
         binding.historyList.layoutManager = LinearLayoutManager(context)
         binding.historyList.adapter = adapter
         binding.historyEmptyContainer.visibility = View.GONE
+        if (AdaptiveLayoutUtil.shouldUseAdaptivePanels(requireContext())) {
+            AdaptiveLayoutUtil.applyMaxWidth(binding.historyList, 960)
+            AdaptiveLayoutUtil.applyMaxWidth(binding.historyEmptyContainer, 720)
+        }
         setUpScrollListener()
         return binding.root
     }

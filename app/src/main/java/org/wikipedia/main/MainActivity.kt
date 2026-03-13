@@ -9,6 +9,7 @@ import androidx.activity.addCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.view.ActionMode
 import androidx.appcompat.widget.Toolbar
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
@@ -98,7 +99,12 @@ class MainActivity : SingleFragmentActivity<MainFragment>(), MainFragment.Callba
             controlNavTabInFragment = false
         } else {
             if (tab == NavTab.SEARCH && Prefs.showSearchTabTooltip) {
-                FeedbackUtil.showTooltip(this, fragment.binding.mainNavTabLayout.findViewById(NavTab.SEARCH.id), getString(R.string.search_tab_tooltip), aboveOrBelow = true, autoDismiss = false)
+                val navView = if (fragment.binding.mainNavRailLayout.isVisible) {
+                    fragment.binding.mainNavRailLayout
+                } else {
+                    fragment.binding.mainNavTabLayout
+                }
+                FeedbackUtil.showTooltip(this, navView.findViewById(NavTab.SEARCH.id), getString(R.string.search_tab_tooltip), aboveOrBelow = true, autoDismiss = false)
                 Prefs.showSearchTabTooltip = false
             }
             if (tab == NavTab.EDITS) {
