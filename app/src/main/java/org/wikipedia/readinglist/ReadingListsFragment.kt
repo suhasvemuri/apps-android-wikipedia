@@ -11,6 +11,7 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -102,6 +103,13 @@ class ReadingListsFragment : Fragment(), SortReadingListsDialog.Callback, Readin
     private var importMode: Boolean = false
     private var recentPreviewSavedReadingList: ReadingList? = null
     private var shouldShowImportedSnackbar = false
+    private var selectedDetailReadingListId = -1L
+    private var detailContainer: View? = null
+    private var detailTitleView: TextView? = null
+    private var detailSubtitleView: TextView? = null
+    private var detailEmptyView: View? = null
+    private var detailRecyclerView: RecyclerView? = null
+    private val detailPageAdapter = DetailPageAdapter()
 
     val filePickerLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
         if (it.resultCode == AppCompatActivity.RESULT_OK) {
@@ -119,6 +127,15 @@ class ReadingListsFragment : Fragment(), SortReadingListsDialog.Callback, Readin
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentReadingListsBinding.inflate(inflater, container, false)
+        detailContainer = binding.root.findViewById(R.id.reading_list_detail_container)
+        detailTitleView = binding.root.findViewById(R.id.reading_list_detail_title)
+        detailSubtitleView = binding.root.findViewById(R.id.reading_list_detail_subtitle)
+        detailEmptyView = binding.root.findViewById(R.id.reading_list_detail_empty)
+        detailRecyclerView = binding.root.findViewById<RecyclerView?>(R.id.reading_list_detail_recycler_view)?.also {
+            it.layoutManager = LinearLayoutManager(context)
+            it.adapter = detailPageAdapter
+            it.addItemDecoration(DrawableItemDecoration(requireContext(), R.attr.list_divider))
+        }
         binding.searchEmptyView.setEmptyText(R.string.search_reading_lists_no_results)
         binding.recyclerView.layoutManager = LinearLayoutManager(context)
         binding.recyclerView.adapter = adapter
@@ -131,7 +148,9 @@ class ReadingListsFragment : Fragment(), SortReadingListsDialog.Callback, Readin
         binding.searchEmptyView.visibility = View.GONE
         enableLayoutTransition(true)
         if (AdaptiveLayoutUtil.shouldUseAdaptivePanels(requireContext())) {
-            AdaptiveLayoutUtil.applyMaxWidth(binding.contentContainer, 1040)
+            if (detailContainer == null) {
+                AdaptiveLayoutUtil.applyMaxWidth(binding.contentContainer, 1040)
+            }
             AdaptiveLayoutUtil.applyMaxWidth(binding.emptyContainer, 720)
         }
 
@@ -174,6 +193,12 @@ class ReadingListsFragment : Fragment(), SortReadingListsDialog.Callback, Readin
     override fun onDestroyView() {
         binding.recyclerView.adapter = null
         binding.recyclerView.clearOnScrollListeners()
+        detailRecyclerView?.adapter = null
+        detailRecyclerView = null
+        detailContainer = null
+        detailTitleView = null
+        detailSubtitleView = null
+        detailEmptyView = null
         _binding = null
         super.onDestroyView()
     }
@@ -364,6 +389,7 @@ class ReadingListsFragment : Fragment(), SortReadingListsDialog.Callback, Readin
                 maybeShowListLimitMessage()
                 updateEmptyState(searchQuery)
                 maybeDeleteListFromIntent()
+                syncDetailPaneSelection()
                 maybeShowPreviewSavedReadingListsSnackbar()
                 currentSearchQuery = searchQuery
                 maybeTurnOffImportMode(lists.filterIsInstance<ReadingList>().toMutableList())
@@ -425,6 +451,58 @@ class ReadingListsFragment : Fragment(), SortReadingListsDialog.Callback, Readin
         }
     }
 
+    private fun hasDetailPane(): Boolean {
+        return detailContainer != null && AdaptiveLayoutUtil.shouldUseAdaptivePanels(requireContext())
+    }
+
+    private fun selectReadingListForDetail(readingList: ReadingList?) {
+        if (!hasDetailPane()) {
+            return
+        }
+        selectedDetailReadingListId = readingList?.id ?: -1L
+        adapter.notifyDataSetChanged()
+        updateDetailPane(readingList)
+    }
+
+    private fun syncDetailPaneSelection() {
+        if (!hasDetailPane()) {
+            return
+        }
+        val readingLists = displayedLists.filterIsInstance<ReadingList>()
+        val selectedReadingList = readingLists.firstOrNull { it.id == selectedDetailReadingListId }
+            ?: readingLists.firstOrNull()
+        selectReadingListForDetail(selectedReadingList)
+    }
+
+    private fun updateDetailPane(readingList: ReadingList?) {
+        val hasReadingList = readingList != null
+        detailEmptyView?.isVisible = !hasReadingList
+        detailTitleView?.isVisible = hasReadingList
+        detailSubtitleView?.isVisible = hasReadingList
+        detailRecyclerView?.isVisible = hasReadingList
+        if (readingList == null) {
+            detailPageAdapter.submitPages(emptyList())
+            return
+        }
+        detailTitleView?.text = readingList.title
+        detailSubtitleView?.text = detailSubtitle(readingList)
+        detailPageAdapter.submitPages(readingList.pages)
+    }
+
+    private fun detailSubtitle(readingList: ReadingList): String {
+        val articleCount = readingList.pages.size
+        val countSummary = resources.getQuantityString(
+            R.plurals.format_reading_list_statistical_summary_without_size,
+            articleCount,
+            articleCount
+        )
+        return if (readingList.description.isNullOrEmpty()) {
+            countSummary
+        } else {
+            getString(R.string.reading_list_tablet_detail_subtitle_format, readingList.description, countSummary)
+        }
+    }
+
     override fun onSortOptionClick(position: Int) {
         sortListsBy(position)
     }
@@ -434,6 +512,7 @@ class ReadingListsFragment : Fragment(), SortReadingListsDialog.Callback, Readin
             view.setReadingList(readingList, ReadingListItemView.Description.SUMMARY, selectMode,
                 newImport = readingList.id == recentPreviewSavedReadingList?.id)
             view.setSearchQuery(currentSearchQuery)
+            view.isActivated = hasDetailPane() && readingList.id == selectedDetailReadingListId
             view.saveClickListener = View.OnClickListener {
                 startActivity(ReadingListActivity.newIntent(requireActivity(), ReadingListMode.PREVIEW))
             }
@@ -444,22 +523,7 @@ class ReadingListsFragment : Fragment(), SortReadingListsDialog.Callback, Readin
 
     private inner class ReadingListPageItemHolder(itemView: PageItemView<ReadingListPage>) : DefaultViewHolder<PageItemView<ReadingListPage>>(itemView) {
         fun bindItem(page: ReadingListPage) {
-            view.item = page
-            view.setTitle(page.displayTitle)
-            view.setTitleMaxLines(2)
-            view.setTitleEllipsis()
-            view.setDescription(page.description)
-            view.setDescriptionMaxLines(2)
-            view.setDescriptionEllipsis()
-            view.setImageUrl(page.thumbUrl)
-            view.isSelected = page.selected
-            view.setSecondaryActionIcon(if (page.saving) R.drawable.ic_download_in_progress else R.drawable.ic_download_circle_gray_24dp, !page.offline || page.saving)
-            view.setCircularProgressVisibility(page.downloadProgress > 0 && page.downloadProgress < CircularProgressBar.MAX_PROGRESS)
-            view.setProgress(if (page.downloadProgress == CircularProgressBar.MAX_PROGRESS) 0 else page.downloadProgress)
-            view.setActionHint(R.string.reading_list_article_make_offline)
-            view.setSearchQuery(currentSearchQuery)
-            view.setUpChipGroup(ReadingListBehaviorsUtil.getListsContainPage(page))
-            PageAvailableOfflineHandler.check(page) { view.setViewsGreyedOut(!it) }
+            bindPageItemView(view, page)
         }
     }
 
@@ -526,7 +590,11 @@ class ReadingListsFragment : Fragment(), SortReadingListsDialog.Callback, Readin
                     }
                 }
                 RecommendedReadingListEvent.submit("open_list_click", "rrl_saved")
-                startActivity(ReadingListActivity.newIntent(requireContext(), readingList))
+                if (hasDetailPane()) {
+                    selectReadingListForDetail(readingList)
+                } else {
+                    startActivity(ReadingListActivity.newIntent(requireContext(), readingList))
+                }
             }
         }
 
@@ -629,8 +697,65 @@ class ReadingListsFragment : Fragment(), SortReadingListsDialog.Callback, Readin
         }
 
         override fun onListChipClick(readingList: ReadingList) {
-            startActivity(ReadingListActivity.newIntent(requireContext(), readingList))
+            if (hasDetailPane()) {
+                selectReadingListForDetail(readingList)
+            } else {
+                startActivity(ReadingListActivity.newIntent(requireContext(), readingList))
+            }
         }
+    }
+
+    private inner class DetailPageHolder(itemView: PageItemView<ReadingListPage>) : DefaultViewHolder<PageItemView<ReadingListPage>>(itemView) {
+        fun bindItem(page: ReadingListPage) {
+            bindPageItemView(view, page)
+            view.callback = readingListPageItemCallback
+        }
+    }
+
+    private inner class DetailPageAdapter : RecyclerView.Adapter<DetailPageHolder>() {
+        private val pages = mutableListOf<ReadingListPage>()
+
+        fun submitPages(newPages: List<ReadingListPage>) {
+            pages.clear()
+            pages.addAll(newPages)
+            notifyDataSetChanged()
+        }
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DetailPageHolder {
+            return DetailPageHolder(PageItemView(requireContext()))
+        }
+
+        override fun onBindViewHolder(holder: DetailPageHolder, position: Int) {
+            holder.bindItem(pages[position])
+        }
+
+        override fun onViewRecycled(holder: DetailPageHolder) {
+            holder.view.callback = null
+            super.onViewRecycled(holder)
+        }
+
+        override fun getItemCount(): Int {
+            return pages.size
+        }
+    }
+
+    private fun bindPageItemView(view: PageItemView<ReadingListPage>, page: ReadingListPage) {
+        view.item = page
+        view.setTitle(page.displayTitle)
+        view.setTitleMaxLines(2)
+        view.setTitleEllipsis()
+        view.setDescription(page.description)
+        view.setDescriptionMaxLines(2)
+        view.setDescriptionEllipsis()
+        view.setImageUrl(page.thumbUrl)
+        view.isSelected = page.selected
+        view.setSecondaryActionIcon(if (page.saving) R.drawable.ic_download_in_progress else R.drawable.ic_download_circle_gray_24dp, !page.offline || page.saving)
+        view.setCircularProgressVisibility(page.downloadProgress > 0 && page.downloadProgress < CircularProgressBar.MAX_PROGRESS)
+        view.setProgress(if (page.downloadProgress == CircularProgressBar.MAX_PROGRESS) 0 else page.downloadProgress)
+        view.setActionHint(R.string.reading_list_article_make_offline)
+        view.setSearchQuery(currentSearchQuery)
+        view.setUpChipGroup(ReadingListBehaviorsUtil.getListsContainPage(page))
+        PageAvailableOfflineHandler.check(page) { view.setViewsGreyedOut(!it) }
     }
 
     private fun maybeDeleteListFromIntent() {

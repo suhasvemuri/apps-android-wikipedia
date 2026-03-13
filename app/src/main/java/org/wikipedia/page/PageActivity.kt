@@ -19,11 +19,13 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import androidx.core.app.ActivityOptionsCompat
 import androidx.core.net.toUri
+import androidx.core.view.GravityCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.children
 import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -357,14 +359,36 @@ class PageActivity : BaseActivity(), PageFragment.Callback, LinkPreviewDialog.Lo
     }
 
     private fun applyAdaptivePageLayout() {
-        val margins = if (AdaptiveLayoutUtil.shouldUseAdaptivePanels(this)) {
+        val adaptivePanelsEnabled = AdaptiveLayoutUtil.shouldUseAdaptivePanels(this)
+        val pinArticleContents = AdaptiveLayoutUtil.shouldPinArticleContents(this)
+        val margins = if (adaptivePanelsEnabled) {
             AdaptiveLayoutUtil.pagePaneMargins(this, foldInfo)
         } else {
             0 to 0
         }
+        val sidePanelWidth = if (pinArticleContents) {
+            AdaptiveLayoutUtil.pinnedSidePanelWidthPx()
+        } else {
+            DimenUtil.dpToPx(300f).toInt()
+        }
+        binding.sidePanelContainer.updateLayoutParams<DrawerLayout.LayoutParams> {
+            width = sidePanelWidth
+        }
+        val panelGravity = (binding.sidePanelContainer.layoutParams as DrawerLayout.LayoutParams).gravity
+        val absoluteGravity = GravityCompat.getAbsoluteGravity(panelGravity, ViewCompat.getLayoutDirection(binding.navigationDrawer))
+        val pinnedOnLeft = absoluteGravity and Gravity.LEFT == Gravity.LEFT
         binding.containerWithNavTrigger.updateLayoutParams<MarginLayoutParams> {
-            leftMargin = margins.first
-            rightMargin = margins.second
+            leftMargin = margins.first + if (pinArticleContents && pinnedOnLeft) sidePanelWidth else 0
+            rightMargin = margins.second + if (pinArticleContents && !pinnedOnLeft) sidePanelWidth else 0
+        }
+        binding.navigationDrawer.setDrawerLockMode(
+            if (pinArticleContents) DrawerLayout.LOCK_MODE_LOCKED_OPEN else DrawerLayout.LOCK_MODE_UNLOCKED,
+            binding.sidePanelContainer
+        )
+        if (pinArticleContents) {
+            binding.navigationDrawer.openDrawer(binding.sidePanelContainer)
+        } else {
+            binding.navigationDrawer.closeDrawer(binding.sidePanelContainer)
         }
     }
 

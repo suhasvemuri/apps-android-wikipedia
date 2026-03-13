@@ -596,6 +596,9 @@
     <string name="saved_list_empty_title">No saved pages yet</string>
     <string name="reading_lists_empty_message">Add articles to a list for reading later, even when you\'re offline.</string>
     <string name="reading_list_empty">You have no articles added to this list.</string>
+    <string name="reading_list_tablet_detail_placeholder_title">Open a reading list</string>
+    <string name="reading_list_tablet_detail_placeholder_message">Select a list to browse its saved articles without leaving the screen.</string>
+    <string name="reading_list_tablet_detail_subtitle_format">%1$s  •  %2$s</string>
     <string name="reading_list_article_offline">Available offline</string>
     <string name="reading_list_article_make_offline">Make this article available offline</string>
     <string name="reading_list_add_to_other_list">Add to another reading list</string>

@@ -20,6 +20,7 @@ object AdaptiveLayoutUtil {
     private const val LARGE_SCREEN_CONTENT_WIDTH_DP = 960
     private const val COMPACT_READING_WIDTH_DP = 760
     private const val WIDE_READING_WIDTH_DP = 960
+    private const val PINNED_SIDE_PANEL_WIDTH_DP = 320
 
     data class FoldInfo(
         val bounds: Rect,
@@ -34,6 +35,10 @@ object AdaptiveLayoutUtil {
         return isLargeScreen(context) && Prefs.isLargeScreenPanelsEnabled
     }
 
+    fun shouldPinArticleContents(context: Context): Boolean {
+        return shouldUseAdaptivePanels(context)
+    }
+
     fun preferredReadingWidthDp(): Int {
         return if (Prefs.isWideReadingLayoutEnabled) {
             WIDE_READING_WIDTH_DP
@@ -46,6 +51,10 @@ object AdaptiveLayoutUtil {
         val windowWidth = WindowMetricsCalculator.getOrCreate().computeCurrentWindowMetrics(activity).bounds.width()
         val maxWidthPx = DimenUtil.dpToPx(maxWidthDp.toFloat()).toInt()
         return ((windowWidth - maxWidthPx) / 2).coerceAtLeast(0)
+    }
+
+    fun pinnedSidePanelWidthPx(): Int {
+        return DimenUtil.dpToPx(PINNED_SIDE_PANEL_WIDTH_DP.toFloat()).toInt()
     }
 
     fun applyMaxWidth(view: View, maxWidthDp: Int) {

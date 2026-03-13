@@ -10,7 +10,6 @@
         android:layout_width="wrap_content"
         android:layout_height="0dp"
         android:background="?attr/paper_color"
-        app:headerLayout="@layout/view_nav_rail_header"
         app:itemIconTint="@color/color_state_nav_tab"
         app:itemTextAppearanceActive="@style/BottomNavigationTextAppearance.Active"
         app:itemTextAppearanceInactive="@style/BottomNavigationTextAppearance"
@@ -19,7 +18,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:menuGravity="top" />
+        app:menuGravity="center" />
 
     <View
         android:id="@+id/main_nav_rail_border"
