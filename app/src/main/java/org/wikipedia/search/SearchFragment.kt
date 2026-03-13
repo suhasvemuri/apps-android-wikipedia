@@ -39,6 +39,7 @@ import org.wikipedia.settings.languages.WikipediaLanguagesFragment
 import org.wikipedia.util.AdaptiveLayoutUtil
 import org.wikipedia.util.DeviceUtil
 import org.wikipedia.util.FeedbackUtil
+import org.wikipedia.util.InteractionUtil
 import org.wikipedia.util.ResourceUtil
 import org.wikipedia.util.StringUtil
 import org.wikipedia.views.LanguageScrollView
@@ -127,10 +128,10 @@ class SearchFragment : Fragment(), SearchResultCallback, RecentSearchesFragment.
                 R.id.fragment_search_results) as SearchResultsFragment
         searchResultsFragment.setInvokeSource(invokeSource)
         (activity as? AppCompatActivity)?.setSupportActionBar(binding.searchToolbar)
+        InteractionUtil.installSoftPress(binding.searchLangButton)
         binding.searchToolbar.setNavigationOnClickListener {
-
+            InteractionUtil.performSubtleHaptic(binding.searchToolbar)
             requireActivity().instrument?.submitInteraction("click", elementId = "search_back")
-
             requireActivity().supportFinishAfterTransition()
         }
         initialLanguageList = JsonUtil.encodeToString(app.languageState.appLanguageCodes).orEmpty()
@@ -271,6 +272,7 @@ class SearchFragment : Fragment(), SearchResultCallback, RecentSearchesFragment.
 
     private fun onLangButtonClick() {
         langBtnClicked = true
+        InteractionUtil.performSubtleHaptic(binding.searchLangButton)
         requestAddLanguageLauncher.launch(WikipediaLanguagesActivity.newIntent(requireActivity(), InvokeSource.SEARCH))
     }
 
@@ -321,9 +323,16 @@ class SearchFragment : Fragment(), SearchResultCallback, RecentSearchesFragment.
     private fun showPanel(panel: Int) {
         if (useSplitSearchPanels()) {
             recentSearchesFragment.show()
+            InteractionUtil.animatePanelVisibility(binding.searchPanelRecent, true)
             when (panel) {
-                PANEL_RECENT_SEARCHES -> searchResultsFragment.hide()
-                PANEL_SEARCH_RESULTS -> searchResultsFragment.show()
+                PANEL_RECENT_SEARCHES -> {
+                    searchResultsFragment.hide()
+                    InteractionUtil.animatePanelVisibility(binding.fragmentSearchResults, false)
+                }
+                PANEL_SEARCH_RESULTS -> {
+                    searchResultsFragment.show()
+                    InteractionUtil.animatePanelVisibility(binding.fragmentSearchResults, true)
+                }
             }
             return
         }
@@ -331,10 +340,14 @@ class SearchFragment : Fragment(), SearchResultCallback, RecentSearchesFragment.
             PANEL_RECENT_SEARCHES -> {
                 searchResultsFragment.hide()
                 recentSearchesFragment.show()
+                InteractionUtil.animatePanelVisibility(binding.fragmentSearchResults, false)
+                InteractionUtil.animatePanelVisibility(binding.searchPanelRecent, true)
             }
             PANEL_SEARCH_RESULTS -> {
                 recentSearchesFragment.hide()
                 searchResultsFragment.show()
+                InteractionUtil.animatePanelVisibility(binding.searchPanelRecent, false)
+                InteractionUtil.animatePanelVisibility(binding.fragmentSearchResults, true)
             }
         }
     }

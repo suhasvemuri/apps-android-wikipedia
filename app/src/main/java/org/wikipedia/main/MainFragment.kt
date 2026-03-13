@@ -84,6 +84,7 @@ import org.wikipedia.suggestededits.SuggestedEditsTasksActivity
 import org.wikipedia.suggestededits.SuggestedEditsTasksFragment
 import org.wikipedia.talk.TalkTopicsActivity
 import org.wikipedia.util.DeviceUtil
+import org.wikipedia.util.InteractionUtil
 import org.wikipedia.usercontrib.UserContribListActivity
 import org.wikipedia.util.DimenUtil
 import org.wikipedia.util.FeedbackUtil
@@ -292,7 +293,9 @@ class MainFragment : Fragment(), BackPressedHandler, MenuProvider, FeedFragment.
         } else {
             tabsItem.isVisible = true
             tabCountsView = TabCountsView(requireActivity(), null)
+            InteractionUtil.installSoftPress(tabCountsView)
             tabCountsView!!.setOnClickListener {
+                InteractionUtil.performSubtleHaptic(tabCountsView)
                 if (WikipediaApp.instance.tabCount == 1) {
                     startActivity(PageActivity.newIntent(requireActivity()))
                 } else {
@@ -310,7 +313,9 @@ class MainFragment : Fragment(), BackPressedHandler, MenuProvider, FeedFragment.
         if (AccountUtil.isLoggedIn) {
             notificationMenuItem.isVisible = true
             notificationButtonView.setUnreadCount(Prefs.notificationUnreadCount)
+            InteractionUtil.installSoftPress(notificationButtonView)
             notificationButtonView.setOnClickListener {
+                InteractionUtil.performSubtleHaptic(notificationButtonView)
                 if (AccountUtil.isLoggedIn) {
                     startActivity(NotificationActivity.newIntent(requireActivity()))
                 }
@@ -592,9 +597,11 @@ class MainFragment : Fragment(), BackPressedHandler, MenuProvider, FeedFragment.
             return false
         }
         if (navTab == NavTab.MORE) {
+            InteractionUtil.performSubtleHaptic(binding.root)
             ExclusiveBottomSheetPresenter.show(childFragmentManager, MenuNavTabDialog.newInstance())
             return false
         }
+        InteractionUtil.performSubtleHaptic(binding.root)
         val fragment = currentFragment
         if (navTab == NavTab.EXPLORE && fragment is FeedFragment) {
             fragment.scrollToTop()

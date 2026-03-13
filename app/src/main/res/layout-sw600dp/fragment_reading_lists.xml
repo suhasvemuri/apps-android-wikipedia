@@ -89,10 +89,18 @@
                 android:gravity="center"
                 android:orientation="vertical">
 
+                <ImageView
+                    android:layout_width="120dp"
+                    android:layout_height="120dp"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_empty_state_illustration"
+                    android:tint="?attr/progressive_color" />
+
                 <TextView
                     style="@style/H2"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
                     android:text="@string/reading_list_tablet_detail_placeholder_title"
                     android:textAlignment="center" />
 

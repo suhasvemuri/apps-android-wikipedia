@@ -85,6 +85,7 @@ import org.wikipedia.util.AdaptiveLayoutUtil
 import org.wikipedia.util.DeviceUtil
 import org.wikipedia.util.DimenUtil
 import org.wikipedia.util.FeedbackUtil
+import org.wikipedia.util.InteractionUtil
 import org.wikipedia.util.ReleaseUtil
 import org.wikipedia.util.StringUtil
 import org.wikipedia.util.ThrowableUtil
@@ -245,6 +246,7 @@ class PageActivity : BaseActivity(), PageFragment.Callback, LinkPreviewDialog.Lo
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         binding.pageToolbarButtonSearch.setOnClickListener {
+            InteractionUtil.performSubtleHaptic(binding.pageToolbarButtonSearch)
             pageFragment.articleInteractionEvent?.logSearchWikipediaClick()
             val articleTitle = if (pageFragment.title?.namespace() == Namespace.MAIN) pageFragment.title?.displayText else null
             startActivity(SearchActivity.newIntent(
@@ -255,12 +257,14 @@ class PageActivity : BaseActivity(), PageFragment.Callback, LinkPreviewDialog.Lo
         }
         binding.pageToolbarButtonTabs.updateTabCount(false)
         binding.pageToolbarButtonTabs.setOnClickListener {
+            InteractionUtil.performSubtleHaptic(binding.pageToolbarButtonTabs)
             pageFragment.articleInteractionEvent?.logTabsClick()
             requestBrowseTabLauncher.launch(TabActivity.newIntentFromPageActivity(this))
         }
         toolbarHideHandler = ViewHideHandler(binding.pageToolbarContainer, null, Gravity.TOP) { isTooltipShowing }
         FeedbackUtil.setButtonTooltip(binding.pageToolbarButtonNotifications, binding.pageToolbarButtonTabs, binding.pageToolbarButtonShowOverflowMenu)
         binding.pageToolbarButtonShowOverflowMenu.setOnClickListener {
+            InteractionUtil.performSubtleHaptic(binding.pageToolbarButtonShowOverflowMenu)
             pageFragment.showOverflowMenu(it)
             pageFragment.articleInteractionEvent?.logMoreClick()
             Prefs.showOneTimeCustomizeToolbarTooltip = false
@@ -268,6 +272,7 @@ class PageActivity : BaseActivity(), PageFragment.Callback, LinkPreviewDialog.Lo
 
         binding.pageToolbarButtonNotifications.isVisible = AccountUtil.isLoggedIn
         binding.pageToolbarButtonNotifications.setOnClickListener {
+            InteractionUtil.performSubtleHaptic(binding.pageToolbarButtonNotifications)
             pageFragment.articleInteractionEvent?.logNotificationClick()
             if (AccountUtil.isLoggedIn) {
                 startActivity(NotificationActivity.newIntent(this@PageActivity))
@@ -280,6 +285,12 @@ class PageActivity : BaseActivity(), PageFragment.Callback, LinkPreviewDialog.Lo
 
         // Navigation setup
         binding.navigationDrawer.setScrimColor(Color.TRANSPARENT)
+        InteractionUtil.installSoftPress(
+            binding.pageToolbarButtonSearch,
+            binding.pageToolbarButtonTabs,
+            binding.pageToolbarButtonNotifications,
+            binding.pageToolbarButtonShowOverflowMenu
+        )
         binding.containerWithNavTrigger.callback = this
         ViewCompat.setOnApplyWindowInsetsListener(binding.navigationDrawer) { view, insets ->
             val insets = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -380,13 +391,16 @@ class PageActivity : BaseActivity(), PageFragment.Callback, LinkPreviewDialog.Lo
         val sidePanelShowButton = findViewById<ImageButton>(R.id.side_panel_show_button) ?: return
 
         sidePanelCollapseButton.setOnClickListener {
+            InteractionUtil.performSubtleHaptic(sidePanelCollapseButton)
             sidePanelCollapsed = true
             applyAdaptivePageLayout()
         }
         sidePanelShowButton.setOnClickListener {
+            InteractionUtil.performSubtleHaptic(sidePanelShowButton)
             sidePanelCollapsed = false
             applyAdaptivePageLayout()
         }
+        InteractionUtil.installSoftPress(sidePanelCollapseButton, sidePanelShowButton)
         sidePanelResizeHandle.setOnTouchListener { _, event ->
             when (event.actionMasked) {
                 MotionEvent.ACTION_DOWN -> {
@@ -437,12 +451,15 @@ class PageActivity : BaseActivity(), PageFragment.Callback, LinkPreviewDialog.Lo
 
     fun setAdaptiveSidePanelEnabled(enabled: Boolean) {
         sidePanelEnabled = enabled
-        applyAdaptivePageLayout()
+        binding.tocList.isEnabled = enabled
+        binding.tocList.alpha = if (enabled) 1f else 0.5f
+        binding.pageScrollerButton.isEnabled = enabled
+        binding.pageScrollerButton.alpha = if (enabled) 1f else 0.5f
     }
 
     private fun applyAdaptivePageLayout() {
         val adaptivePanelsEnabled = AdaptiveLayoutUtil.shouldUseAdaptivePanels(this)
-        val pinArticleContents = AdaptiveLayoutUtil.shouldPinArticleContents(this) && sidePanelEnabled
+        val pinArticleContents = AdaptiveLayoutUtil.shouldPinArticleContents(this)
         val margins = if (adaptivePanelsEnabled) {
             AdaptiveLayoutUtil.pagePaneMargins(this, foldInfo)
         } else {
@@ -457,11 +474,11 @@ class PageActivity : BaseActivity(), PageFragment.Callback, LinkPreviewDialog.Lo
             sidePanelHost?.updateLayoutParams<MarginLayoutParams> {
                 width = expandedWidth
             }
-            sidePanelHost?.isVisible = sidePanelEnabled
-            binding.sidePanelContainer.isVisible = expandedWidth > 0
+            sidePanelHost?.isVisible = pinArticleContents
+            InteractionUtil.animatePanelVisibility(binding.sidePanelContainer, expandedWidth > 0)
             findViewById<View>(R.id.side_panel_resize_handle)?.isVisible = expandedWidth > 0
             findViewById<View>(R.id.side_panel_collapse_button)?.isVisible = expandedWidth > 0
-            sidePanelShowButton?.isVisible = sidePanelEnabled && pinArticleContents && sidePanelCollapsed
+            InteractionUtil.animatePanelVisibility(sidePanelShowButton, pinArticleContents && sidePanelCollapsed)
             binding.containerWithNavTrigger.updateLayoutParams<MarginLayoutParams> {
                 leftMargin = margins.first
                 rightMargin = margins.second

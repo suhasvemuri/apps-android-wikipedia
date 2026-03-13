@@ -74,6 +74,7 @@ import org.wikipedia.settings.RemoteConfig
 import org.wikipedia.util.AdaptiveLayoutUtil
 import org.wikipedia.util.DeviceUtil
 import org.wikipedia.util.FeedbackUtil
+import org.wikipedia.util.InteractionUtil
 import org.wikipedia.util.ResourceUtil
 import org.wikipedia.util.ShareUtil
 import org.wikipedia.util.StringUtil
@@ -136,10 +137,12 @@ class ReadingListsFragment : Fragment(), SortReadingListsDialog.Callback, Readin
             it.adapter = detailPageAdapter
             it.addItemDecoration(DrawableItemDecoration(requireContext(), R.attr.list_divider))
         }
+        InteractionUtil.tuneRecyclerMotion(detailRecyclerView)
         binding.searchEmptyView.setEmptyText(R.string.search_reading_lists_no_results)
         binding.recyclerView.layoutManager = LinearLayoutManager(context)
         binding.recyclerView.adapter = adapter
         binding.recyclerView.addItemDecoration(DrawableItemDecoration(requireContext(), R.attr.list_divider))
+        InteractionUtil.tuneRecyclerMotion(binding.recyclerView)
         setUpScrollListener()
         binding.swipeRefreshLayout.setOnRefreshListener { refreshSync(this, binding.swipeRefreshLayout) }
         if (RemoteConfig.config.disableReadingListSync) {
