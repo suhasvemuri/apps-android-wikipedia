@@ -28,7 +28,6 @@ import org.wikipedia.util.DimenUtil
 import org.wikipedia.util.L10nUtil
 import org.wikipedia.util.ResourceUtil
 import org.wikipedia.util.StringUtil
-import org.wikipedia.util.AdaptiveLayoutUtil
 import org.wikipedia.views.ObservableWebView
 import org.wikipedia.views.ObservableWebView.OnContentHeightChangedListener
 import org.wikipedia.views.PageScrollerView
@@ -39,6 +38,7 @@ class SidePanelHandler internal constructor(private val fragment: PageFragment,
         ObservableWebView.OnClickListener, ObservableWebView.OnScrollChangeListener, OnContentHeightChangedListener {
 
     private val binding = (fragment.requireActivity() as PageActivity).binding
+    private val pageActivity get() = fragment.requireActivity() as PageActivity
     private val scrollerViewParams = FrameLayout.LayoutParams(DimenUtil.roundedDpToPx(SCROLLER_BUTTON_SIZE), DimenUtil.roundedDpToPx(SCROLLER_BUTTON_SIZE))
     private val webView = fragment.webView
     private val tocAdapter = ToCAdapter()
@@ -63,8 +63,9 @@ class SidePanelHandler internal constructor(private val fragment: PageFragment,
         }
     }
 
-    private val isPinned get() = AdaptiveLayoutUtil.shouldPinArticleContents(fragment.requireContext())
-    val isVisible get() = !isPinned && binding.navigationDrawer.isDrawerOpen(binding.sidePanelContainer)
+    private val isPinned get() = pageActivity.isAdaptiveSidePanelExpanded()
+    private val isDrawerMode get() = binding.sidePanelContainer.layoutParams is DrawerLayout.LayoutParams
+    val isVisible get() = isDrawerMode && binding.navigationDrawer.isDrawerOpen(binding.sidePanelContainer)
 
     init {
         binding.tocList.adapter = tocAdapter
@@ -80,18 +81,20 @@ class SidePanelHandler internal constructor(private val fragment: PageFragment,
         webView.addOnScrollChangeListener(this)
         webView.addOnContentHeightChangedListener(this)
         binding.pageScrollerButton.callback = ScrollerCallback()
-        binding.navigationDrawer.addDrawerListener(object : DrawerLayout.SimpleDrawerListener() {
-            override fun onDrawerStateChanged(newState: Int) {
-                super.onDrawerStateChanged(newState)
-                if (!isVisible && newState == DrawerLayout.STATE_DRAGGING) {
-                    onStartShow()
+        if (isDrawerMode) {
+            binding.navigationDrawer.addDrawerListener(object : DrawerLayout.SimpleDrawerListener() {
+                override fun onDrawerStateChanged(newState: Int) {
+                    super.onDrawerStateChanged(newState)
+                    if (!isVisible && newState == DrawerLayout.STATE_DRAGGING) {
+                        onStartShow()
+                    }
                 }
-            }
 
-            override fun onDrawerClosed(drawerView: View) {
-                super.onDrawerClosed(drawerView)
-            }
-        })
+                override fun onDrawerClosed(drawerView: View) {
+                    super.onDrawerClosed(drawerView)
+                }
+            })
+        }
 
         setScrollerPosition()
     }
@@ -102,11 +105,13 @@ class SidePanelHandler internal constructor(private val fragment: PageFragment,
         rtl = L10nUtil.isLangRTL(page.title.wikiSite.languageCode)
         binding.tocList.rtl = rtl
         binding.sidePanelContainer.setLayoutDirectionByLang(page.title.wikiSite.languageCode)
-        binding.sidePanelContainer.updateLayoutParams<DrawerLayout.LayoutParams> {
-            gravity = if (rtl) Gravity.LEFT else Gravity.RIGHT
+        if (isDrawerMode) {
+            binding.sidePanelContainer.updateLayoutParams<DrawerLayout.LayoutParams> {
+                gravity = if (rtl) Gravity.LEFT else Gravity.RIGHT
+            }
         }
         if (isPinned) {
-            binding.navigationDrawer.openDrawer(binding.sidePanelContainer)
+            pageActivity.showAdaptiveSidePanel()
         }
         log()
         articleTocInteractionEvent = ArticleTocInteractionEvent(page.pageProperties.pageId, page.title.wikiSite.dbName(), tocAdapter.count)
@@ -130,8 +135,8 @@ class SidePanelHandler internal constructor(private val fragment: PageFragment,
     }
 
     fun showToC() {
-        if (isPinned) {
-            binding.navigationDrawer.openDrawer(binding.sidePanelContainer)
+        if (!isDrawerMode) {
+            pageActivity.showAdaptiveSidePanel()
             return
         }
         binding.navigationDrawer.openDrawer(binding.sidePanelContainer)
@@ -139,7 +144,7 @@ class SidePanelHandler internal constructor(private val fragment: PageFragment,
     }
 
     fun hide() {
-        if (isPinned) {
+        if (!isDrawerMode) {
             return
         }
         binding.navigationDrawer.closeDrawers()
@@ -151,16 +156,15 @@ class SidePanelHandler internal constructor(private val fragment: PageFragment,
     }
 
     fun setEnabled(enabled: Boolean) {
+        pageActivity.setAdaptiveSidePanelEnabled(enabled)
         if (enabled) {
             setScrollerPosition()
-            if (isPinned) {
-                binding.navigationDrawer.openDrawer(binding.sidePanelContainer)
-            } else {
+            if (isDrawerMode) {
                 binding.navigationDrawer.setSlidingEnabled(true)
             }
         } else {
-            binding.navigationDrawer.closeDrawers()
-            if (!isPinned) {
+            if (isDrawerMode) {
+                binding.navigationDrawer.closeDrawers()
                 binding.navigationDrawer.setSlidingEnabled(false)
             }
         }

@@ -13,7 +13,9 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup.MarginLayoutParams
+import android.view.MotionEvent
 import android.widget.Toast
+import android.widget.ImageButton
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
@@ -113,6 +115,11 @@ class PageActivity : BaseActivity(), PageFragment.Callback, LinkPreviewDialog.Lo
     private var exclusiveTooltipRunnable: Runnable? = null
     private var isTooltipShowing = false
     private var foldInfo: AdaptiveLayoutUtil.FoldInfo? = null
+    private var sidePanelWidthPx = 0
+    private var sidePanelCollapsed = false
+    private var sidePanelEnabled = true
+    private var sidePanelDragStartX = 0f
+    private var sidePanelDragStartWidth = 0
 
     private val requestEditSectionLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
         if (it.resultCode == EditHandler.RESULT_REFRESH_PAGE) {
@@ -205,6 +212,8 @@ class PageActivity : BaseActivity(), PageFragment.Callback, LinkPreviewDialog.Lo
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false)
         binding = ActivityPageBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        restoreSidePanelState(savedInstanceState)
+        initAdaptiveSidePanelControls()
 
         onBackPressedDispatcher.addCallback(this, onBackPressedCallback)
 
@@ -358,28 +367,117 @@ class PageActivity : BaseActivity(), PageFragment.Callback, LinkPreviewDialog.Lo
         YearInReviewDialog.maybeShowYearInReviewFeedbackDialog(this)
     }
 
+    private fun restoreSidePanelState(savedInstanceState: Bundle?) {
+        sidePanelWidthPx = savedInstanceState?.getInt(SAVED_STATE_SIDE_PANEL_WIDTH)
+            ?: AdaptiveLayoutUtil.defaultSidePanelWidthPx()
+        sidePanelCollapsed = savedInstanceState?.getBoolean(SAVED_STATE_SIDE_PANEL_COLLAPSED) ?: false
+    }
+
+    private fun initAdaptiveSidePanelControls() {
+        val sidePanelHost = findViewById<View>(R.id.side_panel_host) ?: return
+        val sidePanelResizeHandle = findViewById<View>(R.id.side_panel_resize_handle) ?: return
+        val sidePanelCollapseButton = findViewById<ImageButton>(R.id.side_panel_collapse_button) ?: return
+        val sidePanelShowButton = findViewById<ImageButton>(R.id.side_panel_show_button) ?: return
+
+        sidePanelCollapseButton.setOnClickListener {
+            sidePanelCollapsed = true
+            applyAdaptivePageLayout()
+        }
+        sidePanelShowButton.setOnClickListener {
+            sidePanelCollapsed = false
+            applyAdaptivePageLayout()
+        }
+        sidePanelResizeHandle.setOnTouchListener { _, event ->
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN -> {
+                    sidePanelDragStartX = event.rawX
+                    sidePanelDragStartWidth = sidePanelWidthPx
+                    true
+                }
+                MotionEvent.ACTION_MOVE -> {
+                    val width = (sidePanelDragStartWidth - (event.rawX - sidePanelDragStartX).toInt())
+                        .coerceIn(AdaptiveLayoutUtil.minSidePanelWidthPx(), AdaptiveLayoutUtil.maxSidePanelWidthPx())
+                    sidePanelWidthPx = width
+                    sidePanelCollapsed = false
+                    sidePanelHost.updateLayoutParams<MarginLayoutParams> {
+                        this.width = width
+                    }
+                    applyAdaptivePageLayout()
+                    true
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> true
+                else -> false
+            }
+        }
+    }
+
+    fun hasAdaptiveSidePanel(): Boolean {
+        return findViewById<View>(R.id.side_panel_host) != null
+    }
+
+    fun isAdaptiveSidePanelExpanded(): Boolean {
+        return hasAdaptiveSidePanel() && sidePanelEnabled && !sidePanelCollapsed && AdaptiveLayoutUtil.shouldPinArticleContents(this)
+    }
+
+    fun showAdaptiveSidePanel() {
+        if (!hasAdaptiveSidePanel()) {
+            return
+        }
+        sidePanelCollapsed = false
+        applyAdaptivePageLayout()
+    }
+
+    fun hideAdaptiveSidePanel() {
+        if (!hasAdaptiveSidePanel()) {
+            return
+        }
+        sidePanelCollapsed = true
+        applyAdaptivePageLayout()
+    }
+
+    fun setAdaptiveSidePanelEnabled(enabled: Boolean) {
+        sidePanelEnabled = enabled
+        applyAdaptivePageLayout()
+    }
+
     private fun applyAdaptivePageLayout() {
         val adaptivePanelsEnabled = AdaptiveLayoutUtil.shouldUseAdaptivePanels(this)
-        val pinArticleContents = AdaptiveLayoutUtil.shouldPinArticleContents(this)
+        val pinArticleContents = AdaptiveLayoutUtil.shouldPinArticleContents(this) && sidePanelEnabled
         val margins = if (adaptivePanelsEnabled) {
             AdaptiveLayoutUtil.pagePaneMargins(this, foldInfo)
         } else {
             0 to 0
         }
-        val sidePanelWidth = if (pinArticleContents) {
-            AdaptiveLayoutUtil.pinnedSidePanelWidthPx()
-        } else {
-            DimenUtil.dpToPx(300f).toInt()
+        val sidePanelWidth = sidePanelWidthPx
+            .coerceIn(AdaptiveLayoutUtil.minSidePanelWidthPx(), AdaptiveLayoutUtil.maxSidePanelWidthPx())
+        if (hasAdaptiveSidePanel()) {
+            val sidePanelHost = findViewById<View>(R.id.side_panel_host)
+            val sidePanelShowButton = findViewById<View>(R.id.side_panel_show_button)
+            val expandedWidth = if (pinArticleContents && !sidePanelCollapsed) sidePanelWidth else 0
+            sidePanelHost?.updateLayoutParams<MarginLayoutParams> {
+                width = expandedWidth
+            }
+            sidePanelHost?.isVisible = sidePanelEnabled
+            binding.sidePanelContainer.isVisible = expandedWidth > 0
+            findViewById<View>(R.id.side_panel_resize_handle)?.isVisible = expandedWidth > 0
+            findViewById<View>(R.id.side_panel_collapse_button)?.isVisible = expandedWidth > 0
+            sidePanelShowButton?.isVisible = sidePanelEnabled && pinArticleContents && sidePanelCollapsed
+            binding.containerWithNavTrigger.updateLayoutParams<MarginLayoutParams> {
+                leftMargin = margins.first
+                rightMargin = margins.second
+            }
+            return
         }
+        val drawerSidePanelWidth = if (pinArticleContents) sidePanelWidth else DimenUtil.dpToPx(300f).toInt()
         binding.sidePanelContainer.updateLayoutParams<DrawerLayout.LayoutParams> {
-            width = sidePanelWidth
+            width = drawerSidePanelWidth
         }
         val panelGravity = (binding.sidePanelContainer.layoutParams as DrawerLayout.LayoutParams).gravity
         val absoluteGravity = GravityCompat.getAbsoluteGravity(panelGravity, ViewCompat.getLayoutDirection(binding.navigationDrawer))
         val pinnedOnLeft = absoluteGravity and Gravity.LEFT == Gravity.LEFT
         binding.containerWithNavTrigger.updateLayoutParams<MarginLayoutParams> {
-            leftMargin = margins.first + if (pinArticleContents && pinnedOnLeft) sidePanelWidth else 0
-            rightMargin = margins.second + if (pinArticleContents && !pinnedOnLeft) sidePanelWidth else 0
+            leftMargin = margins.first + if (pinArticleContents && pinnedOnLeft) drawerSidePanelWidth else 0
+            rightMargin = margins.second + if (pinArticleContents && !pinnedOnLeft) drawerSidePanelWidth else 0
         }
         binding.navigationDrawer.setDrawerLockMode(
             if (pinArticleContents) DrawerLayout.LOCK_MODE_LOCKED_OPEN else DrawerLayout.LOCK_MODE_UNLOCKED,
@@ -402,6 +500,8 @@ class PageActivity : BaseActivity(), PageFragment.Callback, LinkPreviewDialog.Lo
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putString(LANGUAGE_CODE_BUNDLE_KEY, app.appOrSystemLanguageCode)
+        outState.putInt(SAVED_STATE_SIDE_PANEL_WIDTH, sidePanelWidthPx)
+        outState.putBoolean(SAVED_STATE_SIDE_PANEL_COLLAPSED, sidePanelCollapsed)
     }
 
     override fun onActionModeStarted(mode: ActionMode) {
@@ -903,6 +1003,8 @@ class PageActivity : BaseActivity(), PageFragment.Callback, LinkPreviewDialog.Lo
 
     companion object {
         private const val LANGUAGE_CODE_BUNDLE_KEY = "language"
+        private const val SAVED_STATE_SIDE_PANEL_WIDTH = "sidePanelWidth"
+        private const val SAVED_STATE_SIDE_PANEL_COLLAPSED = "sidePanelCollapsed"
         private const val EXCEPTION_MESSAGE_WEBVIEW = "webview"
         const val ACTION_LOAD_IN_NEW_TAB = "org.wikipedia.load_in_new_tab"
         const val ACTION_LOAD_IN_CURRENT_TAB = "org.wikipedia.load_in_current_tab"
