@@ -144,6 +144,7 @@
     <string name="dialog_confirm_delete_donation_history_delete">Delete</string>
     <string name="dialog_confirm_delete_donation_history_cancel">Cancel</string>
     <string name="menu_show_toc">Table of Contents</string>
+    <string name="article_contents_show_button">Contents</string>
     <string name="search_no_results_found">No results found</string>
     <string name="search_reading_list_no_results">No results found in \"%s\"</string>
     <string name="search_reading_lists_no_results">No results found in reading lists</string>

@@ -209,6 +209,42 @@ object JavaScriptActionHandler {
         val css = if (AdaptiveLayoutUtil.isLargeScreen(context)) {
             String.format(Locale.ROOT, """
                 @media (min-width: 900px) {
+                  body {
+                    line-height: 1.72 !important;
+                    text-rendering: optimizeLegibility;
+                  }
+                  body p,
+                  body ul,
+                  body ol,
+                  body dl,
+                  body blockquote {
+                    max-width: min(100%%, %4${'$'}dpx) !important;
+                    margin-left: auto !important;
+                    margin-right: auto !important;
+                  }
+                  body p,
+                  body ul,
+                  body ol,
+                  body dl {
+                    margin-top: 0.78em !important;
+                    margin-bottom: 0.92em !important;
+                  }
+                  body h1,
+                  body h2,
+                  body h3,
+                  body h4,
+                  body h5,
+                  body h6 {
+                    max-width: min(100%%, %4${'$'}dpx) !important;
+                    margin: 1.4em auto 0.52em !important;
+                    line-height: 1.18 !important;
+                    letter-spacing: -0.01em;
+                  }
+                  body blockquote {
+                    padding: 0.25em 1.1em !important;
+                    border-left: 3px solid rgba(127, 127, 127, 0.35) !important;
+                    opacity: 0.92;
+                  }
                   body figure,
                   body .thumb,
                   body .gallery,
@@ -247,12 +283,27 @@ object JavaScriptActionHandler {
                   body .android-adaptive-table-scroll > table {
                     margin: 0 !important;
                   }
+                  body .android-adaptive-table-scroll::-webkit-scrollbar {
+                    height: 8px;
+                  }
+                  body .android-adaptive-table-scroll::-webkit-scrollbar-thumb {
+                    background: rgba(127, 127, 127, 0.36);
+                    border-radius: 999px;
+                  }
                   body table.infobox,
                   body table.sidebar {
                     max-width: min(100%%, %3${'$'}dpx) !important;
                   }
+                  body table.infobox,
+                  body table.sidebar,
+                  body .android-adaptive-table-scroll table {
+                    border-collapse: separate !important;
+                    border-spacing: 0 !important;
+                    border-radius: 12px;
+                    overflow: hidden;
+                  }
                 }
-            """.trimIndent(), mediaWidthPx, captionWidthPx, floatedTableWidthPx)
+            """.trimIndent(), mediaWidthPx, captionWidthPx, floatedTableWidthPx, readingWidthPx)
         } else {
             ""
         }

@@ -201,20 +201,29 @@
             </LinearLayout>
         </LinearLayout>
 
-        <ImageButton
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/side_panel_show_button"
-            android:layout_width="40dp"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="wrap_content"
             android:layout_height="40dp"
             android:layout_marginEnd="8dp"
-            android:background="@drawable/shape_circle"
             android:contentDescription="@string/article_menu_bar_contents_button"
-            android:padding="8dp"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:minWidth="0dp"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:text="@string/article_contents_show_button"
+            android:textAllCaps="false"
             android:visibility="gone"
-            app:backgroundTint="?attr/paper_color"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@id/container_with_nav_trigger"
-            app:srcCompat="@drawable/ic_baseline_arrow_left_alt_24px"
-            app:tint="?attr/progressive_color" />
+            app:icon="@drawable/ic_baseline_arrow_left_alt_24px"
+            app:iconGravity="textStart"
+            app:iconPadding="6dp"
+            app:iconTint="?attr/progressive_color"
+            app:strokeColor="?attr/border_color"
+            app:strokeWidth="1dp" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

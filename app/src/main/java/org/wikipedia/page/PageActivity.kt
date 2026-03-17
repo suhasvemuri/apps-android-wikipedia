@@ -33,6 +33,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.preference.PreferenceManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.button.MaterialButton
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -388,7 +389,7 @@ class PageActivity : BaseActivity(), PageFragment.Callback, LinkPreviewDialog.Lo
         val sidePanelHost = findViewById<View>(R.id.side_panel_host) ?: return
         val sidePanelResizeHandle = findViewById<View>(R.id.side_panel_resize_handle) ?: return
         val sidePanelCollapseButton = findViewById<ImageButton>(R.id.side_panel_collapse_button) ?: return
-        val sidePanelShowButton = findViewById<ImageButton>(R.id.side_panel_show_button) ?: return
+        val sidePanelShowButton = findViewById<MaterialButton>(R.id.side_panel_show_button) ?: return
 
         sidePanelCollapseButton.setOnClickListener {
             InteractionUtil.performSubtleHaptic(sidePanelCollapseButton)
@@ -469,7 +470,7 @@ class PageActivity : BaseActivity(), PageFragment.Callback, LinkPreviewDialog.Lo
             .coerceIn(AdaptiveLayoutUtil.minSidePanelWidthPx(), AdaptiveLayoutUtil.maxSidePanelWidthPx())
         if (hasAdaptiveSidePanel()) {
             val sidePanelHost = findViewById<View>(R.id.side_panel_host)
-            val sidePanelShowButton = findViewById<View>(R.id.side_panel_show_button)
+            val sidePanelShowButton = findViewById<MaterialButton>(R.id.side_panel_show_button)
             val expandedWidth = if (pinArticleContents && !sidePanelCollapsed) sidePanelWidth else 0
             sidePanelHost?.updateLayoutParams<MarginLayoutParams> {
                 width = expandedWidth
@@ -478,6 +479,13 @@ class PageActivity : BaseActivity(), PageFragment.Callback, LinkPreviewDialog.Lo
             InteractionUtil.animatePanelVisibility(binding.sidePanelContainer, expandedWidth > 0)
             findViewById<View>(R.id.side_panel_resize_handle)?.isVisible = expandedWidth > 0
             findViewById<View>(R.id.side_panel_collapse_button)?.isVisible = expandedWidth > 0
+            sidePanelShowButton?.icon = getDrawable(
+                if (ViewCompat.getLayoutDirection(binding.navigationDrawer) == ViewCompat.LAYOUT_DIRECTION_RTL) {
+                    R.drawable.ic_baseline_arrow_right_alt_24px
+                } else {
+                    R.drawable.ic_baseline_arrow_left_alt_24px
+                }
+            )
             InteractionUtil.animatePanelVisibility(sidePanelShowButton, pinArticleContents && sidePanelCollapsed)
             binding.containerWithNavTrigger.updateLayoutParams<MarginLayoutParams> {
                 leftMargin = margins.first
