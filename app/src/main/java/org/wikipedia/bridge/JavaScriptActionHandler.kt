@@ -1,6 +1,8 @@
 package org.wikipedia.bridge
 
+import android.app.Activity
 import android.content.Context
+import androidx.window.layout.WindowMetricsCalculator
 import kotlinx.serialization.Serializable
 import org.wikipedia.BuildConfig
 import org.wikipedia.R
@@ -11,11 +13,14 @@ import org.wikipedia.json.JsonUtil
 import org.wikipedia.page.Namespace
 import org.wikipedia.page.PageTitle
 import org.wikipedia.page.PageViewModel
+import org.wikipedia.settings.LeadImageStyle
 import org.wikipedia.settings.Prefs
+import org.wikipedia.util.AdaptiveLayoutUtil
 import org.wikipedia.util.DimenUtil
 import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
+import kotlin.math.min
 import kotlin.math.roundToInt
 
 object JavaScriptActionHandler {
@@ -182,6 +187,103 @@ object JavaScriptActionHandler {
         return "(function() {" +
                 "document.documentElement.classList.add('skin-theme-clientpref-night');" +
                 "})();"
+    }
+
+    fun applyAdaptiveArticleStyle(context: Context): String {
+        val activity = context as? Activity ?: return ""
+        val readingWidthPx = AdaptiveLayoutUtil.preferredReadingWidthPx(activity)
+        val windowWidthPx = WindowMetricsCalculator.getOrCreate().computeCurrentWindowMetrics(activity).bounds.width()
+        val mediaWidthPx = min(
+            windowWidthPx - DimenUtil.roundedDpToPx(48f),
+            when (LeadImageStyle.fromPrefValue(Prefs.leadImageStyle)) {
+                LeadImageStyle.HERO -> (readingWidthPx * 1.08f).roundToInt()
+                LeadImageStyle.EDITORIAL -> (readingWidthPx * 0.86f).roundToInt()
+                LeadImageStyle.COMPACT -> (readingWidthPx * 0.72f).roundToInt()
+            }
+        ).coerceAtLeast(DimenUtil.roundedDpToPx(320f))
+        val captionWidthPx = (mediaWidthPx * 0.92f).roundToInt()
+        val floatedTableWidthPx = min(
+            windowWidthPx - DimenUtil.roundedDpToPx(64f),
+            (readingWidthPx * 0.78f).roundToInt()
+        ).coerceAtLeast(DimenUtil.roundedDpToPx(280f))
+        val css = if (AdaptiveLayoutUtil.isLargeScreen(context)) {
+            String.format(Locale.ROOT, """
+                @media (min-width: 900px) {
+                  body figure,
+                  body .thumb,
+                  body .gallery,
+                  body .tsingle {
+                    max-width: min(100%%, %1${'$'}dpx) !important;
+                    margin-left: auto !important;
+                    margin-right: auto !important;
+                  }
+                  body figure img,
+                  body .thumb img,
+                  body .gallerybox img,
+                  body .tsingle img {
+                    display: block !important;
+                    max-width: 100%% !important;
+                    height: auto !important;
+                    margin-left: auto !important;
+                    margin-right: auto !important;
+                    border-radius: 12px;
+                  }
+                  body figcaption,
+                  body .thumbcaption,
+                  body .gallerytext {
+                    max-width: min(100%%, %2${'$'}dpx) !important;
+                    margin: 10px auto 0 !important;
+                    line-height: 1.48 !important;
+                    font-size: 0.94em !important;
+                    opacity: 0.84;
+                  }
+                  body .android-adaptive-table-scroll {
+                    overflow-x: auto !important;
+                    overflow-y: hidden !important;
+                    margin: 24px 0 !important;
+                    padding: 0 0 4px !important;
+                    -webkit-overflow-scrolling: touch;
+                  }
+                  body .android-adaptive-table-scroll > table {
+                    margin: 0 !important;
+                  }
+                  body table.infobox,
+                  body table.sidebar {
+                    max-width: min(100%%, %3${'$'}dpx) !important;
+                  }
+                }
+            """.trimIndent(), mediaWidthPx, captionWidthPx, floatedTableWidthPx)
+        } else {
+            ""
+        }
+
+        return String.format(Locale.ROOT, """
+            (function() {
+              const styleId = 'android-adaptive-article-style';
+              let style = document.getElementById(styleId);
+              if (!style) {
+                style = document.createElement('style');
+                style.id = styleId;
+                document.head.appendChild(style);
+              }
+              style.textContent = `%1${'$'}s`;
+
+              document.querySelectorAll('table').forEach(function(table) {
+                if (table.closest('.navbox') || table.closest('.metadata')) {
+                  return;
+                }
+                let wrapper = table.parentElement && table.parentElement.classList.contains('android-adaptive-table-scroll')
+                  ? table.parentElement
+                  : null;
+                if (!wrapper) {
+                  wrapper = document.createElement('div');
+                  wrapper.className = 'android-adaptive-table-scroll';
+                  table.parentNode.insertBefore(wrapper, table);
+                  wrapper.appendChild(table);
+                }
+              });
+            })();
+        """.trimIndent(), css.replace("`", "\\`"))
     }
 
     fun getElementAtPosition(x: Int, y: Int): String {

@@ -460,6 +460,7 @@ class PageFragment : Fragment(), BackPressedHandler, CommunicationBridge.Communi
         }
         updateProgressBar(false)
         webView.visibility = View.VISIBLE
+        bridge.execute(JavaScriptActionHandler.applyAdaptiveArticleStyle(requireContext()))
         bridge.evaluate(JavaScriptActionHandler.getRevision()) { value ->
             if (!isAdded || value == null || value == "null") {
                 return@evaluate

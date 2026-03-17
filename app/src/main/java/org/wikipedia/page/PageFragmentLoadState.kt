@@ -106,6 +106,7 @@ class PageFragmentLoadState(private var model: PageViewModel,
     fun onConfigurationChanged() {
         leadImagesHandler.loadLeadImage()
         bridge.execute(JavaScriptActionHandler.setTopMargin(leadImagesHandler.topMargin))
+        bridge.execute(JavaScriptActionHandler.applyAdaptiveArticleStyle(fragment.requireContext()))
     }
 
     private fun commonSectionFetchOnCatch(caught: Throwable) {
