@@ -33,6 +33,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -330,7 +331,7 @@ class ReadingListsFragment : Fragment(), SortReadingListsDialog.Callback, Readin
         ReadingListBehaviorsUtil.searchListsAndPages(lifecycleScope, searchQuery) { lists ->
             val result = DiffUtil.calculateDiff(object : DiffUtil.Callback() {
                 override fun getOldListSize(): Int {
-                    return lists.size
+                    return displayedLists.size
                 }
 
                 override fun getNewListSize(): Int {
@@ -462,9 +463,21 @@ class ReadingListsFragment : Fragment(), SortReadingListsDialog.Callback, Readin
         if (!hasDetailPane()) {
             return
         }
+        val previousSelectionId = selectedDetailReadingListId
         selectedDetailReadingListId = readingList?.id ?: -1L
-        adapter.notifyDataSetChanged()
+        notifyReadingListSelectionChanged(previousSelectionId)
+        notifyReadingListSelectionChanged(selectedDetailReadingListId)
         updateDetailPane(readingList)
+    }
+
+    private fun notifyReadingListSelectionChanged(readingListId: Long) {
+        if (readingListId < 0) {
+            return
+        }
+        val position = displayedLists.indexOfFirst { it is ReadingList && it.id == readingListId }
+        if (position != -1) {
+            adapter.notifyItemChanged(position)
+        }
     }
 
     private fun syncDetailPaneSelection() {
@@ -484,12 +497,12 @@ class ReadingListsFragment : Fragment(), SortReadingListsDialog.Callback, Readin
         detailSubtitleView?.isVisible = hasReadingList
         detailRecyclerView?.isVisible = hasReadingList
         if (readingList == null) {
-            detailPageAdapter.submitPages(emptyList())
+            detailPageAdapter.submitList(emptyList())
             return
         }
         detailTitleView?.text = readingList.title
         detailSubtitleView?.text = detailSubtitle(readingList)
-        detailPageAdapter.submitPages(readingList.pages)
+        detailPageAdapter.submitList(readingList.pages.toList())
     }
 
     private fun detailSubtitle(readingList: ReadingList): String {
@@ -715,30 +728,29 @@ class ReadingListsFragment : Fragment(), SortReadingListsDialog.Callback, Readin
         }
     }
 
-    private inner class DetailPageAdapter : RecyclerView.Adapter<DetailPageHolder>() {
-        private val pages = mutableListOf<ReadingListPage>()
-
-        fun submitPages(newPages: List<ReadingListPage>) {
-            pages.clear()
-            pages.addAll(newPages)
-            notifyDataSetChanged()
-        }
+    private inner class DetailPageAdapter : ListAdapter<ReadingListPage, DetailPageHolder>(DetailPageDiffCallback()) {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DetailPageHolder {
             return DetailPageHolder(PageItemView(requireContext()))
         }
 
         override fun onBindViewHolder(holder: DetailPageHolder, position: Int) {
-            holder.bindItem(pages[position])
+            holder.bindItem(getItem(position))
         }
 
         override fun onViewRecycled(holder: DetailPageHolder) {
             holder.view.callback = null
             super.onViewRecycled(holder)
         }
+    }
 
-        override fun getItemCount(): Int {
-            return pages.size
+    private class DetailPageDiffCallback : DiffUtil.ItemCallback<ReadingListPage>() {
+        override fun areItemsTheSame(oldItem: ReadingListPage, newItem: ReadingListPage): Boolean {
+            return oldItem.id == newItem.id
+        }
+
+        override fun areContentsTheSame(oldItem: ReadingListPage, newItem: ReadingListPage): Boolean {
+            return oldItem == newItem
         }
     }
 
