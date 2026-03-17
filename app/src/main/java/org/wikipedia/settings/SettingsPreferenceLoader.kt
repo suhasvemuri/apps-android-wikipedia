@@ -3,6 +3,7 @@ package org.wikipedia.settings
 import android.content.DialogInterface
 import android.content.Intent
 import android.os.Build
+import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreferenceCompat
@@ -27,6 +28,8 @@ import org.wikipedia.readinglist.recommended.RecommendedReadingListSource
 import org.wikipedia.readinglist.sync.ReadingListSyncAdapter
 import org.wikipedia.settings.languages.WikipediaLanguagesActivity
 import org.wikipedia.theme.ThemeFittingRoomActivity
+import org.wikipedia.settings.AdaptiveReadingWidthMode
+import org.wikipedia.settings.LeadImageStyle
 import org.wikipedia.util.FeedbackUtil
 import org.wikipedia.yearinreview.YearInReviewViewModel
 
@@ -40,6 +43,7 @@ internal class SettingsPreferenceLoader(fragment: PreferenceFragmentCompat) : Ba
         findPreference(R.string.preference_key_sync_reading_lists).onPreferenceChangeListener = SyncReadingListsListener()
         loadPreferences(R.xml.preferences_about)
         updateLanguagePrefSummary()
+        initAdaptiveReadingPrefs()
         findPreference(R.string.preference_key_language).onPreferenceClickListener = Preference.OnPreferenceClickListener {
             activity.startActivityForResult(WikipediaLanguagesActivity.newIntent(activity, Constants.InvokeSource.SETTINGS),
                     Constants.ACTIVITY_REQUEST_ADD_A_LANGUAGE)
@@ -175,6 +179,40 @@ internal class SettingsPreferenceLoader(fragment: PreferenceFragmentCompat) : Ba
             DonateUtil.currencyFormat.format(Prefs.donationReminderConfig.donateAmount), articleFrequency) else
                 activity.getString(R.string.donation_reminders_settings_description_off)
         findPreference(R.string.preference_key_donation_reminders).summary = description
+    }
+
+    private fun initAdaptiveReadingPrefs() {
+        (findPreference(R.string.preference_key_reading_width_mode) as ListPreference).apply {
+            summary = readingWidthSummary(value)
+            onPreferenceChangeListener = Preference.OnPreferenceChangeListener { preference, newValue ->
+                preference.summary = readingWidthSummary(newValue.toString())
+                true
+            }
+        }
+        (findPreference(R.string.preference_key_lead_image_style) as ListPreference).apply {
+            summary = leadImageSummary(value)
+            onPreferenceChangeListener = Preference.OnPreferenceChangeListener { preference, newValue ->
+                preference.summary = leadImageSummary(newValue.toString())
+                true
+            }
+        }
+    }
+
+    private fun readingWidthSummary(value: String): String {
+        return when (AdaptiveReadingWidthMode.fromPrefValue(value)) {
+            AdaptiveReadingWidthMode.COMPACT -> activity.getString(R.string.preference_value_reading_width_compact)
+            AdaptiveReadingWidthMode.BALANCED -> activity.getString(R.string.preference_value_reading_width_balanced)
+            AdaptiveReadingWidthMode.WIDE -> activity.getString(R.string.preference_value_reading_width_wide)
+            AdaptiveReadingWidthMode.IMMERSIVE -> activity.getString(R.string.preference_value_reading_width_immersive)
+        }
+    }
+
+    private fun leadImageSummary(value: String): String {
+        return when (LeadImageStyle.fromPrefValue(value)) {
+            LeadImageStyle.HERO -> activity.getString(R.string.preference_value_lead_image_hero)
+            LeadImageStyle.EDITORIAL -> activity.getString(R.string.preference_value_lead_image_editorial)
+            LeadImageStyle.COMPACT -> activity.getString(R.string.preference_value_lead_image_compact)
+        }
     }
 
     private inner class SyncReadingListsListener : Preference.OnPreferenceChangeListener {

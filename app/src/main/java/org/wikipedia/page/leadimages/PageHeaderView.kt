@@ -14,6 +14,7 @@ import org.wikipedia.donate.DonateUtil
 import org.wikipedia.donate.donationreminder.DonationReminderConfig
 import org.wikipedia.donate.donationreminder.DonationReminderHelper
 import org.wikipedia.settings.Prefs
+import org.wikipedia.util.AdaptiveLayoutUtil
 import org.wikipedia.util.DateUtil
 import org.wikipedia.util.DimenUtil
 import org.wikipedia.util.GradientUtil
@@ -77,7 +78,7 @@ class PageHeaderView(context: Context, attrs: AttributeSet? = null) : LinearLayo
 
     fun hideImage() {
         binding.headerImageContainer.isVisible = false
-        layoutParams = CoordinatorLayout.LayoutParams(LayoutParams.MATCH_PARENT, donationReminderCardViewHeight)
+        layoutParams = buildLayoutParams(donationReminderCardViewHeight)
         visibility = VISIBLE
     }
 
@@ -86,7 +87,7 @@ class PageHeaderView(context: Context, attrs: AttributeSet? = null) : LinearLayo
     }
 
     fun show() {
-        layoutParams = CoordinatorLayout.LayoutParams(LayoutParams.MATCH_PARENT, DimenUtil.leadImageHeightForDevice(context) + donationReminderCardViewHeight)
+        layoutParams = buildLayoutParams(AdaptiveLayoutUtil.leadImageHeightPx(context as android.app.Activity) + donationReminderCardViewHeight)
         visibility = VISIBLE
     }
 
@@ -178,6 +179,17 @@ class PageHeaderView(context: Context, attrs: AttributeSet? = null) : LinearLayo
             binding.donationReminderCardView.isVisible = true
         } else {
             binding.donationReminderCardView.isVisible = false
+        }
+    }
+
+    private fun buildLayoutParams(height: Int): CoordinatorLayout.LayoutParams {
+        val activity = context as android.app.Activity
+        val useEditorialLayout = AdaptiveLayoutUtil.isLargeScreen(context)
+        return CoordinatorLayout.LayoutParams(
+            if (useEditorialLayout) AdaptiveLayoutUtil.leadImageWidthPx(activity) else LayoutParams.MATCH_PARENT,
+            height
+        ).apply {
+            gravity = if (useEditorialLayout) Gravity.TOP or Gravity.CENTER_HORIZONTAL else Gravity.TOP
         }
     }
 }

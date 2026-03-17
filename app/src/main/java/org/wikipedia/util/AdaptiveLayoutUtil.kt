@@ -13,13 +13,13 @@ import androidx.window.layout.WindowInfoTracker
 import androidx.window.layout.WindowLayoutInfo
 import androidx.window.layout.WindowMetricsCalculator
 import kotlinx.coroutines.flow.Flow
+import org.wikipedia.settings.AdaptiveReadingWidthMode
+import org.wikipedia.settings.LeadImageStyle
 import org.wikipedia.settings.Prefs
 
 object AdaptiveLayoutUtil {
     private const val LARGE_SCREEN_WIDTH_DP = 600
     private const val LARGE_SCREEN_CONTENT_WIDTH_DP = 960
-    private const val COMPACT_READING_WIDTH_DP = 760
-    private const val WIDE_READING_WIDTH_DP = 960
     private const val DEFAULT_SIDE_PANEL_WIDTH_DP = 264
     private const val MIN_SIDE_PANEL_WIDTH_DP = 208
     private const val MAX_SIDE_PANEL_WIDTH_DP = 360
@@ -42,17 +42,34 @@ object AdaptiveLayoutUtil {
     }
 
     fun preferredReadingWidthDp(): Int {
-        return if (Prefs.isWideReadingLayoutEnabled) {
-            WIDE_READING_WIDTH_DP
-        } else {
-            COMPACT_READING_WIDTH_DP
-        }
+        return AdaptiveReadingWidthMode.fromPrefValue(Prefs.readingWidthMode).widthDp
+    }
+
+    fun preferredReadingWidthPx(activity: Activity): Int {
+        return DimenUtil.dpToPx(preferredReadingWidthDp().toFloat()).toInt()
     }
 
     fun contentHorizontalMarginPx(activity: Activity, maxWidthDp: Int = LARGE_SCREEN_CONTENT_WIDTH_DP): Int {
         val windowWidth = WindowMetricsCalculator.getOrCreate().computeCurrentWindowMetrics(activity).bounds.width()
         val maxWidthPx = DimenUtil.dpToPx(maxWidthDp.toFloat()).toInt()
         return ((windowWidth - maxWidthPx) / 2).coerceAtLeast(0)
+    }
+
+    fun leadImageWidthPx(activity: Activity): Int {
+        val preferredWidth = preferredReadingWidthPx(activity)
+        return when (LeadImageStyle.fromPrefValue(Prefs.leadImageStyle)) {
+            LeadImageStyle.HERO -> WindowMetricsCalculator.getOrCreate().computeCurrentWindowMetrics(activity).bounds.width()
+            LeadImageStyle.EDITORIAL -> preferredWidth
+            LeadImageStyle.COMPACT -> (preferredWidth * 0.82f).toInt()
+        }
+    }
+
+    fun leadImageHeightPx(activity: Activity): Int {
+        return when (LeadImageStyle.fromPrefValue(Prefs.leadImageStyle)) {
+            LeadImageStyle.HERO -> DimenUtil.leadImageHeightForDevice(activity)
+            LeadImageStyle.EDITORIAL -> DimenUtil.roundedDpToPx(260f)
+            LeadImageStyle.COMPACT -> DimenUtil.roundedDpToPx(220f)
+        }
     }
 
     fun defaultSidePanelWidthPx(): Int {

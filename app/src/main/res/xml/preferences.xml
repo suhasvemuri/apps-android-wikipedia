@@ -34,11 +34,22 @@
             android:defaultValue="true"
             android:title="@string/preference_title_large_screen_panels"
             android:summary="@string/preference_summary_large_screen_panels" />
-        <org.wikipedia.settings.SwitchPreferenceMultiLine
-            android:key="@string/preference_key_wide_reading_layout"
-            android:defaultValue="true"
-            android:title="@string/preference_title_wide_reading_layout"
-            android:summary="@string/preference_summary_wide_reading_layout" />
+        <ListPreference
+            android:key="@string/preference_key_reading_width_mode"
+            android:defaultValue="balanced"
+            android:title="@string/preference_title_reading_width_mode"
+            android:summary="@string/preference_summary_reading_width_mode"
+            android:entries="@array/preference_reading_width_entries"
+            android:entryValues="@array/preference_reading_width_values"
+            app:useSimpleSummaryProvider="false" />
+        <ListPreference
+            android:key="@string/preference_key_lead_image_style"
+            android:defaultValue="editorial"
+            android:title="@string/preference_title_lead_image_style"
+            android:summary="@string/preference_summary_lead_image_style"
+            android:entries="@array/preference_lead_image_style_entries"
+            android:entryValues="@array/preference_lead_image_style_values"
+            app:useSimpleSummaryProvider="false" />
         <org.wikipedia.settings.PreferenceMultiLine
             android:key="@string/preference_key_color_theme"
             android:defaultValue="0"

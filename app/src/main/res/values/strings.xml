@@ -409,6 +409,39 @@
     <string name="preference_summary_large_screen_panels">Use side panels and dual-pane layouts on tablets and foldables.</string>
     <string name="preference_title_wide_reading_layout">Wide-screen reading layout</string>
     <string name="preference_summary_wide_reading_layout">Optimize article and media screens for tablets, foldables, keyboards, and multi-window use.</string>
+    <string name="preference_title_reading_width_mode">Article width</string>
+    <string name="preference_summary_reading_width_mode">Choose how wide article text and media should appear on larger screens.</string>
+    <string name="preference_title_lead_image_style">Lead image style</string>
+    <string name="preference_summary_lead_image_style">Control whether article lead images feel full-bleed, editorial, or compact.</string>
+    <string name="preference_value_reading_width_compact">Compact</string>
+    <string name="preference_value_reading_width_balanced">Balanced</string>
+    <string name="preference_value_reading_width_wide">Wide</string>
+    <string name="preference_value_reading_width_immersive">Immersive</string>
+    <string name="preference_value_lead_image_hero">Hero</string>
+    <string name="preference_value_lead_image_editorial">Editorial</string>
+    <string name="preference_value_lead_image_compact">Compact</string>
+    <string-array name="preference_reading_width_entries">
+        <item>@string/preference_value_reading_width_compact</item>
+        <item>@string/preference_value_reading_width_balanced</item>
+        <item>@string/preference_value_reading_width_wide</item>
+        <item>@string/preference_value_reading_width_immersive</item>
+    </string-array>
+    <string-array name="preference_reading_width_values">
+        <item>compact</item>
+        <item>balanced</item>
+        <item>wide</item>
+        <item>immersive</item>
+    </string-array>
+    <string-array name="preference_lead_image_style_entries">
+        <item>@string/preference_value_lead_image_hero</item>
+        <item>@string/preference_value_lead_image_editorial</item>
+        <item>@string/preference_value_lead_image_compact</item>
+    </string-array>
+    <string-array name="preference_lead_image_style_values">
+        <item>hero</item>
+        <item>editorial</item>
+        <item>compact</item>
+    </string-array>
     <string name="nav_item_donate">Donate</string>
     <string name="nav_item_year_in_review">Year In Review</string>
     <string name="error_voice_search_not_available">Sorry, voice recognition is not available.</string>

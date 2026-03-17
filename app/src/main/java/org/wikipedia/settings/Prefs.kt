@@ -215,6 +215,20 @@ object Prefs {
     val isWideReadingLayoutEnabled
         get() = PrefsIoUtil.getBoolean(R.string.preference_key_wide_reading_layout, true)
 
+    val readingWidthMode
+        get() = if (PrefsIoUtil.contains(R.string.preference_key_reading_width_mode)) {
+            PrefsIoUtil.getString(R.string.preference_key_reading_width_mode, AdaptiveReadingWidthMode.BALANCED.prefValue)
+                ?: AdaptiveReadingWidthMode.BALANCED.prefValue
+        } else if (isWideReadingLayoutEnabled) {
+            AdaptiveReadingWidthMode.WIDE.prefValue
+        } else {
+            AdaptiveReadingWidthMode.COMPACT.prefValue
+        }
+
+    val leadImageStyle
+        get() = PrefsIoUtil.getString(R.string.preference_key_lead_image_style, LeadImageStyle.EDITORIAL.prefValue)
+            ?: LeadImageStyle.EDITORIAL.prefValue
+
     fun getReadingListSortMode(defaultValue: Int): Int {
         return PrefsIoUtil.getInt(R.string.preference_key_reading_list_sort_mode, defaultValue)
     }

@@ -31,6 +31,7 @@ import org.wikipedia.page.PageFragment
 import org.wikipedia.page.PageTitle
 import org.wikipedia.settings.Prefs
 import org.wikipedia.suggestededits.PageSummaryForEdit
+import org.wikipedia.util.AdaptiveLayoutUtil
 import org.wikipedia.util.DimenUtil
 import org.wikipedia.util.FeedbackUtil
 import org.wikipedia.util.StringUtil
@@ -86,7 +87,7 @@ class LeadImagesHandler(private val parentFragment: PageFragment,
         }
 
     val topMargin get() = DimenUtil.roundedPxToDp(
-        ((if (isLeadImageEnabled) DimenUtil.leadImageHeightForDevice(activity) else parentFragment.toolbarMargin.toFloat()).toFloat()) +
+        ((if (isLeadImageEnabled) AdaptiveLayoutUtil.leadImageHeightPx(activity) else parentFragment.toolbarMargin.toFloat()).toFloat()) +
                 getDonationReminderCardViewHeight(true)
     )
     val callToActionEditLang get() =

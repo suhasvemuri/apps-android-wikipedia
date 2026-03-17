@@ -37,6 +37,8 @@
     <string name="preference_key_collapse_tables">collapseTables</string>
     <string name="preference_key_large_screen_panels">largeScreenPanels</string>
     <string name="preference_key_wide_reading_layout">wideReadingLayout</string>
+    <string name="preference_key_reading_width_mode">readingWidthMode</string>
+    <string name="preference_key_lead_image_style">leadImageStyle</string>
     <string name="preference_key_session_data">session_data</string>
     <string name="preference_key_session_timeout">session_timeout</string>
     <string name="preference_key_crashed_before_activity_created">crashedBeforeActivityCreated</string>
